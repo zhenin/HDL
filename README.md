@@ -1,10 +1,7 @@
-# HDL
-High-definition likelihood inference of genetic correlations (HDL)
-
 What is HDL?
 ------------
 
-`HDL` is a tool for estimating genetic correlation based on GWAS summary statistics. It reduces the variance of a genetic correlation estimate by about 50%, compared to LD Score regression (LDSC). Although HDL is written in R, you can use it with command line. So no worry if you are not an R user.
+High-Definition Likelihood (HDL) is a likelihood-based method for estimating genetic correlation using GWAS summary statistics. It reduces the variance of a genetic correlation estimate by about 50%, compared to LD Score regression (LDSC). Here, we provide a computational tool `HDL` to implement our method. Although `HDL` is written in R, you can use it with command line. So no worry if you are not an R user.
 
 What data are required?
 -----------------------
