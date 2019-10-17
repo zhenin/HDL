@@ -20,7 +20,7 @@ What data are required?
 
 -   `gwas2.df` A data frame including GWAS summary statistics of genetic variants for trait 2. The format is same as `gwas1.df`.
 
--   The eigenvalues and eigenvectors of LD matrices. For European population, we have computed the LD and their eigens from 336,000 ethnically British individuals in UK Biobank. You can download them here. These eigens of LD are from eigen-decomposition results based on 307,519 QCed UK Biobank Axiom Array SNPs.
+-   The eigenvalues and eigenvectors of LD matrices. For European population, we have computed the LD and their eigens from 336,000 ethnically British individuals in UK Biobank. You can download them [here](https://www.dropbox.com/sh/hkg8x55s03d9zbh/AACaGPDqpPjAkLzeanRjSLrNa?dl=0). The size is about 7.5 GB after unzipping. These eigens of LD are from eigen-decomposition results based on 307,519 QCed UK Biobank Axiom Array SNPs.
 
 Installation
 ------------
@@ -54,6 +54,8 @@ library(HDL)
 Estimating genetic correlation using HDL
 ----------------------------------------
 
+To illustrate how to use HDL, we include two cleaned UKB GWAS summary statistics datasets as examples. `gwas1.example.rda` is for birth weight; and `gwas2.example.rda` is for type 2 diabetes.
+
 #### Command line user
 
 Next, you can simply run `HDL.run.R` like below to use HDL:
@@ -75,10 +77,60 @@ There are several arguments you should pass to `HDL`. **Please note that when yo
 
 #### R user
 
-`HDL.rg` is the function to perform HDL. The arguments for `HDL.rg` is the same as above arguments for command line implementation. For direct R documentation of `HDL.rg` function, you can use question mark in R:
+`HDL.rg` is the function to perform HDL. The arguments for `HDL.rg` is the same as above arguments for command line implementation. Let's have a try with example data as below
+
+``` r
+data(gwas1.example)
+data(gwas2.example)
+LD.path <- "/Users/zhengning/Work/HDL/package/UKB_SVD_eigen90_extraction"
+res.HDL <- HDL.rg(gwas1.example, gwas2.example, LD.path)
+res.HDL
+```
+
+A list is returned with
+
+-   `rg`, the estimation of genetic correlation.
+-   `rg.se`, the standard error of estimated genetic correlation.
+-   `P`, the Wald test P-value for rg
+
+For direct R documentation of `HDL.rg` function, you can use question mark in R:
 
 ``` r
 ?HDL.rg
+```
+
+Reading HDL results
+-------------------
+
+The first section provides version information of HDL package:
+
+``` r
+*********************************************************************
+* High-definition likelihood (HDL)
+* Version 1.0
+*********************************************************************
+```
+
+The next section gives the proportion of overlap SNPs between GWAS summary statistics and reference panel. A low SNP overlap may lead to poor estimation.
+
+``` r
+Analysis starts 
+307519 out of 307519 (100%) SNPs in reference panel are available in GWAS 1.  
+307519 out of 307519 (100%) SNPs in reference panel are available in GWAS 2.  
+```
+
+The following section shows whether the estimated rg is within (-1,1). If not, we switch to an algorithm that guarantees a constrained estimate.
+
+``` r
+Integrating piecewise results 
+Estimated rg is within (-1,1). Continuing computing standard error. 
+```
+
+The last section gives the genetic correlation, its standard error and P-value based on Wald test.
+
+``` r
+Genetic Correlation:  -0.2354 (0.0444)
+P:  1.146e-07
 ```
 
 For Help
