@@ -1,7 +1,7 @@
 What is HDL?
 ------------
 
-High-Definition Likelihood (HDL) is a likelihood-based method for estimating genetic correlation using GWAS summary statistics. It reduces the variance of a genetic correlation estimate by about 50%, compared to LD Score regression (LDSC). Here, we provide a computational tool `HDL` to implement our method. Although `HDL` is written in R, you can use it with command line. So no worry if you are not an R user.
+High-Definition Likelihood (HDL) is a likelihood-based method for estimating genetic correlation using GWAS summary statistics. It reduces the variance of a genetic correlation estimate by about 60%, compared to LD Score regression (LDSC). Here, we provide a computational tool `HDL` to implement our method. Although `HDL` is written in R, you can use it with command line. So no worry if you are not an R user.
 
 What data are required?
 -----------------------
@@ -20,7 +20,9 @@ What data are required?
 
 -   `gwas2.df` A data frame including GWAS summary statistics of genetic variants for trait 2. The format is same as `gwas1.df`.
 
--   The eigenvalues and eigenvectors of LD matrices. For European population, we have computed the LD and their eigens from 336,000 ethnically British individuals in UK Biobank. You can download them [here](https://www.dropbox.com/sh/hkg8x55s03d9zbh/AACaGPDqpPjAkLzeanRjSLrNa?dl=0). The size is about 7.5 GB after unzipping. These eigens of LD are from eigen-decomposition results based on 307,519 QCed UK Biobank Axiom Array SNPs.
+-   The eigenvalues and eigenvectors of LD matrices. For European population, we have computed the LD and their eigens from 336,000 ethnically British individuals in UK Biobank. You can download them [here](https://www.dropbox.com/sh/ai2o21gxklhlvs3/AABPD7nKv3nXcvmoQQ3cGh9Qa?dl=0). Two sets of reference panel are provided:
+-   307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping.
+-   1,029,876 QCed UK Biobank imputed SNPs. The size is about 31 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimate of genetic correlation. Therefore if the GWAS includes most of Hapmap3 SNPs, then we recommend to use the imputed reference panel.
 
 Installation
 ------------
