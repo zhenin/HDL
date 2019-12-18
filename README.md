@@ -1,7 +1,7 @@
 What is HDL?
 ------------
 
-High-Definition Likelihood (HDL) is a likelihood-based method for estimating genetic correlation using GWAS summary statistics. It reduces the variance of a genetic correlation estimate by about 60%, compared to LD Score regression (LDSC). Here, we provide a computational tool `HDL` to implement our method. Although `HDL` is written in R, you can use it with the command line. So no worry if you are not an R user.
+High-Definition Likelihood (HDL) is a likelihood-based method for estimating genetic correlation using GWAS summary statistics. Compared to [LD Score regression (LDSC)](https://github.com/bulik/ldsc), It reduces the variance of a genetic correlation estimate by about 60%. Here, we provide an R-based computational tool `HDL` to implement our method. Although `HDL` is written in R, you can use it with the command line. So no worry if you are not an R user.
 
 What data are required?
 -----------------------
@@ -68,14 +68,14 @@ Rscript HDL.run.R gwas1.df=gwas1.example.rda gwas2.df=gwas2.example.rda LD.path=
 
 There are several arguments you should pass to `HDL`. **Please note that when you specify arguments, there should not be any space on any side of `=`.**
 
--   Mandatory arguments
--   `gwas1.df`, the file of the GWAS results for trait 1;
--   `gwas2.df`, the file of the GWAS results for trait 2;
--   `LD.path`, the path to the directory where linkage disequilibrium (LD) information is stored.
--   Optional arguments
--   `output.file`, where the log and results should be written. If you do not specify a file, the log will be printed in the console;
--   `Nref`, the sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 336000;
--   `N0`, the number of individuals included in both cohorts. However, the estimated genetic correlation is usually robust against misspecified N0. If not given, the default value is set to the minimum sample size across all SNPs in cohort 1 and cohort 2.
+*   Mandatory arguments
+    +   `gwas1.df`, the file of the GWAS results for trait 1;
+    +   `gwas2.df`, the file of the GWAS results for trait 2;
+    +   `LD.path`, the path to the directory where linkage disequilibrium (LD) information is stored.
+*   Optional arguments
+    +   `output.file`, where the log and results should be written. If you do not specify a file, the log will be printed in the console;
+    +   `Nref`, the sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 336000;
+    +   `N0`, the number of individuals included in both cohorts. However, the estimated genetic correlation is usually robust against misspecified N0. If not given, the default value is set to the minimum sample size across all SNPs in cohort 1 and cohort 2.
 
 #### R user
 
@@ -93,7 +93,7 @@ A list is returned with
 
 -   `rg`, the estimation of genetic correlation.
 -   `rg.se`, the standard error of estimated genetic correlation.
--   `P`, the Wald test P-value for rg
+-   `P`, the Wald test P-value for `rg`.
 
 For direct R documentation of `HDL.rg` function, you can use a question mark in R:
 
