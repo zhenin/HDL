@@ -1,0 +1,20 @@
+citHeader("If you use the HDL package, please cite:")
+
+citEntry(entry="Article",
+         title = "High-definition likelihood inference of genetic correlations across human complex traits",
+         author = personList(as.person("Zheng Ning"),
+                             as.person("Yudi Pawitan"),
+                             as.person("Xia Shen")),
+         journal      = "Submitted",
+         year         = "2019",
+         volume       = "0",
+         number       = "0",
+         pages        = "0-0",
+         url          = "",
+         
+         textVersion = 
+         paste("Ning Z, Pawitan Y, Shen X (2019).", 
+               "High-definition likelihood inference of genetic correlations across human complex traits.",
+               "Submitted.",
+               "URL ")
+)

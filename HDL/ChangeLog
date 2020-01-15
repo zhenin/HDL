@@ -1,0 +1,21 @@
+2020-01-15 16:30  zheng
+
+    * Changed the installation files from .gz to folder
+    * Updated HDL.install.R
+
+2019-12-23 14:17  xia
+
+    * Updated to version 1.0-1 
+    * Link added for UK Biobank imputed marker reference
+    * Welcome message added
+    * citation() enabled
+    * This ChangeLog added
+      
+2019-09-19 16:30  zheng
+
+    * HDL packaged! Initial version 1.0
+    * Genetic correlation estimation using full likelihood
+      based on GWAS summary statistics
+      	UK Biobank SNP array reference markers
+      	2-fold increase in estimation efficiency over LDSC
+      	
