@@ -41,10 +41,11 @@ Rscript HDL.install.R
 
 #### R user
 
-You can use the following codes to install `HDL` from Github:
+You can use the `install_github` function in `devtools` package to install `HDL` from Github:
 
 ``` r
-install.packages("https://github.com/zhenin/HDL/raw/master/HDL_1.0-1.tar.gz", repos=NULL)
+library(devtools)
+install_github("zhenin/HDL/HDL")
 ```
 
 and load the package via:
