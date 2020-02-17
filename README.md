@@ -64,7 +64,11 @@ To illustrate how to use HDL, we include two cleaned UKB GWAS summary statistics
 Next, you can simply run `HDL.run.R` like below to use HDL:
 
 ``` r
-Rscript HDL.run.R gwas1.df=gwas1.example.rda gwas2.df=gwas2.example.rda LD.path=UKB_SVD_eigen90_extraction output.file=test.Rout
+Rscript HDL.run.R \
+gwas1.df=gwas1.example.rda \
+gwas2.df=gwas2.example.rda \
+LD.path=/Your_path/UKB_SVD_eigen90_extraction \
+output.file=test.Rout
 ```
 
 There are several arguments you should pass to `HDL`. **Please note that when you specify arguments, there should not be any space on any side of `=`.**
