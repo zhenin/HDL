@@ -105,16 +105,8 @@ For direct R documentation of `HDL.rg` function, you can use a question mark in 
 Reading HDL results
 -------------------
 
-The first section provides version information of HDL package:
 
-``` r
-*********************************************************************
-* High-definition likelihood (HDL)
-* Version 1.0
-*********************************************************************
-```
-
-The next section gives the proportion of overlap SNPs between GWAS summary statistics and reference panel. A low SNP overlap may lead to poor estimation.
+The first section gives the proportion of overlap SNPs between GWAS summary statistics and reference panel. A low SNP overlap may lead to poor estimation.
 
 ``` r
 Analysis starts 

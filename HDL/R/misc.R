@@ -1,4 +1,3 @@
-
 .onAttach <- 
 		function(lib, pkg, ...)
 {

@@ -1,3 +1,9 @@
+2020-02-17 21:30  zheng
+
+    * Updated to version 1.0-2
+    * Mismatch SNPs solved
+    * Uploaded imputed examples (gwas1.imputed.example.rda etc.)
+
 2020-01-15 16:30  zheng
 
     * Changed the installation files from .gz to folder
