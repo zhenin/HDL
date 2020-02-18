@@ -20,7 +20,7 @@ What data are required?
 
 *   `gwas2.df` A data frame including GWAS summary statistics of genetic variants for trait 2. The format is the same as `gwas1.df`.
 
-*   The eigenvalues and eigenvectors of LD matrices. For the European-ancestry population, we have computed the LD matrices and their eigen-decomposition from 336,000 Genomic British individuals in UK Biobank. You can download these pre-computed reference files [here](https://www.dropbox.com/sh/8xsnd1mzvmi9y4w/AACMP2ir_Jn1hgqHW7jrDGG3a?dl=0). Two sets of reference panel are provided:
+*   The eigenvalues and eigenvectors of LD matrices. For the European-ancestry population, we have computed the LD matrices and their eigen-decomposition from 336,000 Genomic British individuals in UK Biobank. You can download these pre-computed reference files [here](https://www.dropbox.com/sh/denm6ka7b4wnooj/AACkRtb_2KjER3Q4qFBpEGSQa?dl=0). Two sets of reference panel are provided:
     +   307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping.
     +   1,029,876 QCed UK Biobank imputed SNPs. The size is about 31 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. Therefore if the GWAS includes most of the HapMap3 SNPs, then we recommend using the imputed reference panel.
 
@@ -65,8 +65,8 @@ Next, you can simply run `HDL.run.R` like below to use HDL:
 
 ``` r
 Rscript HDL.run.R \
-gwas1.df=gwas1.example.rda \
-gwas2.df=gwas2.example.rda \
+gwas1.df=gwas1.example.rds \
+gwas2.df=gwas2.example.rds \
 LD.path=/Your_path/UKB_SVD_eigen90_extraction \
 output.file=test.Rout
 ```
@@ -74,8 +74,8 @@ output.file=test.Rout
 There are several arguments you should pass to `HDL`. **Please note that when you specify arguments, there should not be any space on any side of `=`.**
 
 *   Mandatory arguments
-    +   `gwas1.df`, the file of the GWAS results for trait 1;
-    +   `gwas2.df`, the file of the GWAS results for trait 2;
+    +   `gwas1.df`, the file of the GWAS results for trait 1, the extension should be .rds or .txt;
+    +   `gwas2.df`, the file of the GWAS results for trait 2, the extension should be .rds or .txt;
     +   `LD.path`, the path to the directory where linkage disequilibrium (LD) information is stored.
 *   Optional arguments
     +   `output.file`, where the log and results should be written. If you do not specify a file, the log will be printed in the console;
