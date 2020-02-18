@@ -58,7 +58,7 @@
 HDL.rg <-
   function(gwas1.df, gwas2.df, LD.path, Nref = 336000, N0 = min(gwas1.df$N, gwas2.df$N), output.file = ""){
     
-    cat("Analysis starts \n")
+    cat("Analysis starts at",date(),"\n")
     load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
     load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
     k1 <- sum(gwas1.df$SNP %in% overlap.snp.MAF.05.list)
@@ -260,7 +260,6 @@ HDL.rg <-
       }
       rg.se <-  sqrt(mean((rg.jackknife - mean(rg.jackknife))^2)*(length(rg.jackknife) - 1))
       P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
-      return(list(rg = rg, rg.se = rg.se, P = P))
     } else{
       ## rg is not sensible, switch to full likelihood for rg estimation, slower
       cat("Estimated rg beyonds (-1,1). Switching to full likelihood. \n")
@@ -312,6 +311,9 @@ HDL.rg <-
       }
       rg.se <-  sqrt(mean((rg.jackknife - mean(rg.jackknife))^2)*(length(rg.jackknife) - 1))
       P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
-      return(list(rg = rg, rg.se = rg.se, P = P))
     }
+    if(output.file == ""){
+      cat("Analysis finished at",date(),"\n")
+    }
+    return(list(rg = rg, rg.se = rg.se, P = P))
   }

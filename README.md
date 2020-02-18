@@ -20,7 +20,7 @@ What data are required?
 
 *   `gwas2.df` A data frame including GWAS summary statistics of genetic variants for trait 2. The format is the same as `gwas1.df`.
 
-*   The eigenvalues and eigenvectors of LD matrices. For the European-ancestry population, we have computed the LD matrices and their eigen-decomposition from 336,000 Genomic British individuals in UK Biobank. You can download these pre-computed reference files [here](https://www.dropbox.com/sh/ai2o21gxklhlvs3/AABPD7nKv3nXcvmoQQ3cGh9Qa?dl=0). Two sets of reference panel are provided:
+*   The eigenvalues and eigenvectors of LD matrices. For the European-ancestry population, we have computed the LD matrices and their eigen-decomposition from 336,000 Genomic British individuals in UK Biobank. You can download these pre-computed reference files [here](https://www.dropbox.com/sh/8xsnd1mzvmi9y4w/AACMP2ir_Jn1hgqHW7jrDGG3a?dl=0). Two sets of reference panel are provided:
     +   307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping.
     +   1,029,876 QCed UK Biobank imputed SNPs. The size is about 31 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. Therefore if the GWAS includes most of the HapMap3 SNPs, then we recommend using the imputed reference panel.
 
