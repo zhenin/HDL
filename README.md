@@ -57,7 +57,7 @@ library(HDL)
 Estimating genetic correlation using HDL
 ----------------------------------------
 
-To illustrate how to use HDL, we include two cleaned UKB GWAS summary statistics datasets as examples. `gwas1.example.rda` is for birth weight; `gwas2.example.rda` is for type 2 diabetes.
+To illustrate how to use HDL, we include two cleaned UKB GWAS summary statistics datasets as examples. `gwas1.example.rda` is for birth weight; `gwas2.example.rda` is for type 2 diabetes. More examples for imputed reference panel can be found [here](https://www.dropbox.com/sh/tdue80pjng9c45a/AACK4vyWgHLKPNL1JB6hWOD9a?dl=0).
 
 #### Command line user
 

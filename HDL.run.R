@@ -41,6 +41,7 @@ if(output.file != ""){
   capture.output(res.HDL <- HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file), 
                  file = output.file, append = TRUE)
 } else{
+  library(HDL)
   res.HDL <- HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file)
 }
 

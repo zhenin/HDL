@@ -59,8 +59,19 @@ HDL.rg <-
   function(gwas1.df, gwas2.df, LD.path, Nref = 336000, N0 = min(gwas1.df$N, gwas2.df$N), output.file = ""){
     
     cat("Analysis starts at",date(),"\n")
-    load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
-    load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
+    setwd(LD.path)
+    if(file.exists("overlap.snp.MAF.05.list.rda")){
+      load(file="UKB_snp_counter_overlap_MAF_5.RData")
+      load(file="overlap.snp.MAF.05.list.rda")
+    } else if(file.exists("UKB_snp_list_imputed.vector_form.RData")){
+      load(file="UKB_snp_counter_imputed.RData")
+      load(file="UKB_snp_list_imputed.vector_form.RData")
+      overlap.snp.MAF.05.list <- snps.list.imputed.vector
+      nsnps.list <- nsnps.list.imputed
+    } else{
+      stop("It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels.")
+    }
+    
     k1 <- sum(gwas1.df$SNP %in% overlap.snp.MAF.05.list)
     k2 <- sum(gwas2.df$SNP %in% overlap.snp.MAF.05.list)
     k1.percent <- paste("(",round(100*k1 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
@@ -90,8 +101,13 @@ HDL.rg <-
         
         ## reference sample ##
         
-        load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000_500banded_90eigen.rda"))
-        snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.bim"))
+        if(file.exists("overlap.snp.MAF.05.list.rda")){
+          load(file=paste0("ukb_chr",chr,".",piece,"_n336000_500banded_90eigen.rda"))
+          snps.ref.df <- read.table(paste0("ukb_chr",chr,".",piece,"_n336000.bim"))
+        } else if(file.exists("UKB_snp_list_imputed.vector_form.RData")){
+          load(file=paste0("ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
+          snps.ref.df <- read.table(paste0("ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
+        }
         colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
         snps.ref <- snps.ref.df$id
         A2.ref <- snps.ref.df$A2
@@ -312,6 +328,7 @@ HDL.rg <-
       rg.se <-  sqrt(mean((rg.jackknife - mean(rg.jackknife))^2)*(length(rg.jackknife) - 1))
       P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
     }
+    cat("\n")
     if(output.file == ""){
       cat("Analysis finished at",date(),"\n")
     }
