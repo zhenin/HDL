@@ -69,5 +69,7 @@ cat("P: ",p.out, file = output.file, append = TRUE)
 cat("\n", file = output.file, append = TRUE)
 cat("\n", file = output.file, append = TRUE)
 cat("Analysis finished at",date(),"\n", file = output.file, append = TRUE)
-cat("The results were saved to", output.file, file = output.file, append = TRUE)
+if(output.file != ""){
+  cat("The results were saved to", output.file, file = output.file, append = TRUE)
+}
 cat("\n", file = output.file, append = TRUE)
