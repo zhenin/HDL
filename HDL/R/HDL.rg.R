@@ -83,7 +83,7 @@ HDL.rg <-
     ## stats
     N1 <- max(gwas1.df[, "N"])
     N2 <- max(gwas2.df[, "N"])
-    N <- sqrt(N1*N2)
+    N <- sqrt(N1)*sqrt(N2)
     
     ## samples for phenotypes
     p1 <- N0/N1
@@ -173,20 +173,20 @@ HDL.rg <-
         bstar2 = crossprod(V,bhat2)  ##
         
         opt = optim(c(h11.wls[2],1), llfun, N=N1, Nref=Nref, lam=lam, bstar=bstar1, M=M,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10),  hessian=TRUE)
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
         
-        h11.hdl = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2))
+        h11.hdl = opt$par
         
         opt = optim(c(h22.wls[2],1), llfun, N=N2, Nref=Nref, lam=lam, bstar=bstar2, M=M,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10),  hessian=TRUE)
-        h22.hdl = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2))
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+        h22.hdl = opt$par
         
         opt=  optim(c(h12.wls[2],rho12), llfun.gcov.part.2, h11=h11.hdl, h22=h22.hdl, 
                     rho12=rho12, M=M, N1=N1, N2=N2, N0=N0, Nref=Nref, 
                     lam0=lam, lam1=lam, lam2=lam, 
                     bstar1=bstar1, bstar2=bstar2,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10),  hessian=TRUE)
-        h12.hdl = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2)) ## the sqrt2 because llfun = -2*loglik
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+        h12.hdl = opt$par
         
         HDL11.df <- rbind(HDL11.df, h11.hdl)
         HDL22.df <- rbind(HDL22.df, h22.hdl)
@@ -220,20 +220,20 @@ HDL.rg <-
     cat("Integrating piecewise results \n")
     M.ref <- sum(unlist(nsnps.list))
     opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar1.v), M=M.ref,
-                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10),  hessian=TRUE)
-    h11.hdl = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2))
+                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+    h11.hdl = opt$par
     
     
     opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar2.v), M=M.ref,
-                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10),  hessian=TRUE)
-    h22.hdl = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2))
+                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+    h22.hdl = opt$par
     
     opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl, h22=h22.hdl,
                 rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                 lam0=unlist(lam.v), lam1=unlist(lam.v), lam2=unlist(lam.v),
                 bstar1=unlist(bstar1.v), bstar2=unlist(bstar2.v),
-                lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10),  hessian=TRUE)
-    h12.hdl = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2)) ## the sqrt2 because llfun = -2*loglik
+                lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+    h12.hdl = opt$par
     rg <- h12.hdl[1]/sqrt(h11.hdl[1]*h22.hdl[1])
     
     
@@ -248,20 +248,20 @@ HDL.rg <-
       rg.jackknife <- length(lam.v)
       for(i in 1:length(lam.v)){
         opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v[-i]), bstar=unlist(bstar1.v[-i]), M=M.ref,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10),  hessian=TRUE)
-        h11.hdl.jackknife = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2))
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+        h11.hdl.jackknife = opt$par
         
         
         opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v[-i]), bstar=unlist(bstar2.v[-i]), M=M.ref,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10),  hessian=TRUE)
-        h22.hdl.jackknife = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2))
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+        h22.hdl.jackknife = opt$par
         
         opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl, h22=h22.hdl,
                     rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                     lam0=unlist(lam.v[-i]), lam1=unlist(lam.v[-i]), lam2=unlist(lam.v[-i]),
                     bstar1=unlist(bstar1.v[-i]), bstar2=unlist(bstar2.v[-i]),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10),  hessian=TRUE)
-        h12.hdl.jackknife = c(opt$par, sqrt(diag(solve(opt$hessian))) * sqrt(2)) ## the sqrt2 because llfun = -2*loglik
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+        h12.hdl.jackknife = opt$par
         rg.jackknife[i] <- h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1])
         
         ## Report progress ##
@@ -283,20 +283,20 @@ HDL.rg <-
                   M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref, 
                   lam1=unlist(lam.v), lam2=unlist(lam.v),
                   bstar1=unlist(bstar1.v), bstar2=unlist(bstar2.v),
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10),  hessian=TRUE)
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10))
       if(opt$value > 1e5 | opt$convergence != 0){
         opt=  optim(c(0.5,1, 0.5,1, sign(rg)*0.5, rho12), llfun.rg.full.likelihood, 
                     M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref, 
                     lam1=unlist(lam.v), lam2=unlist(lam.v),
                     bstar1=unlist(bstar1.v), bstar2=unlist(bstar2.v),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10),  hessian=TRUE)
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10))
       }
       if(opt$value > 1e5 | opt$convergence != 0){
         opt=  optim(c(0.5,1, 0.5,1, sign(rg)*0.8, rho12), llfun.rg.full.likelihood, 
                     M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref, 
                     lam1=unlist(lam.v), lam2=unlist(lam.v),
                     bstar1=unlist(bstar1.v), bstar2=unlist(bstar2.v),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10),  hessian=TRUE)
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10))
       }
       if(opt$value > 1e5 | opt$convergence != 0){
         stop("Algorithm fails to converge. It may because heritabilities are too small or genetic correlation is very close to 1.")
@@ -312,7 +312,7 @@ HDL.rg <-
                     M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                     lam1=unlist(lam.v[-i]), lam2=unlist(lam.v[-i]),
                     bstar1=unlist(bstar1.v[-i]), bstar2=unlist(bstar2.v[-i]),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10),  hessian=TRUE)
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10))
         rg.jackknife[i] <- opt$par[5]
         
         ## Report progress ##

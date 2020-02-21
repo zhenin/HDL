@@ -1,7 +1,10 @@
 What is HDL?
 ------------
 
-High-Definition Likelihood (HDL) is a likelihood-based method for estimating genetic correlation using GWAS summary statistics. Compared to [LD Score regression (LDSC)](https://github.com/bulik/ldsc), It reduces the variance of a genetic correlation estimate by about 60%. Here, we provide an R-based computational tool `HDL` to implement our method. Although `HDL` is written in R, you can use it with the command line. So no worry if you are not an R user.
+High-Definition Likelihood (HDL) is a likelihood-based method for estimating genetic correlation using GWAS summary statistics. 
+Compared to [LD Score regression (LDSC)](https://github.com/bulik/ldsc), It reduces the variance of a genetic correlation estimate by about 60%. 
+Here, we provide an R-based computational tool `HDL` to implement our method. Although `HDL` is written in R, 
+you can use it with the command line. So no worry if you are not an R user.
 
 What data are required?
 -----------------------
@@ -20,10 +23,11 @@ What data are required?
 
 *   `gwas2.df` A data frame including GWAS summary statistics of genetic variants for trait 2. The format is the same as `gwas1.df`.
 
-*   The eigenvalues and eigenvectors of LD matrices. For the European-ancestry population, we have computed the LD matrices and their eigen-decomposition from 336,000 Genomic British individuals in UK Biobank. You can download these pre-computed reference files from the links below. Two sets of reference panel are provided:
-    +   307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping. You can download it [here](https://www.dropbox.com/s/t74qqnhlprd1uex/HDL_UKB_array_eigen90_reference.zip?dl=0).
-    +   1,029,876 QCed UK Biobank imputed SNPs. The size is about 31 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. Therefore if the GWAS includes most of the HapMap3 SNPs, then we recommend using the imputed reference panel. You can download it [here](https://www.dropbox.com/sh/denm6ka7b4wnooj/AACkRtb_2KjER3Q4qFBpEGSQa?dl=0) or a [compressed file](https://www.dropbox.com/s/trhbeg8vvx0zhdx/UKB_imputed_SVD_eigen99_extraction.tar.gz?dl=0).
-
+*   The eigenvalues and eigenvectors of LD matrices. For the European-ancestry population, 
+we have computed the LD matrices and their eigen-decomposition from 336,000 Genomic British individuals in UK Biobank. 
+You can download these pre-computed reference files following the [instruction](https://github.com/zhenin/HDL/wiki/Reference-panels) 
+in the [wiki](https://github.com/zhenin/HDL/wiki).
+    
 Installation
 ------------
 
@@ -57,11 +61,11 @@ library(HDL)
 Estimating genetic correlation using HDL
 ----------------------------------------
 
-To illustrate how to use HDL, we include two cleaned UKB GWAS summary statistics datasets as examples. `gwas1.example.rda` is for birth weight; `gwas2.example.rda` is for type 2 diabetes. More examples for imputed reference panel can be found [here](https://www.dropbox.com/sh/tdue80pjng9c45a/AACK4vyWgHLKPNL1JB6hWOD9a?dl=0).
+To illustrate how to use `HDL`, we include two cleaned UKB GWAS summary statistics datasets as examples. `gwas1.example.rda` is for birth weight; `gwas2.example.rda` is for type 2 diabetes. More examples for imputed reference panel can be found [here](https://www.dropbox.com/sh/tdue80pjng9c45a/AACK4vyWgHLKPNL1JB6hWOD9a?dl=0).
 
 #### Command line user
 
-Next, you can simply run `HDL.run.R` like below to use HDL:
+Next, you can simply run `HDL.run.R` like below to use `HDL` tool:
 
 ``` r
 Rscript HDL.run.R \
@@ -84,7 +88,7 @@ There are several arguments you should pass to `HDL`. **Please note that when yo
 
 #### R user
 
-`HDL.rg` is the function to perform HDL. The arguments for `HDL.rg` are the same as the above arguments for command-line implementation. Let's have a try with example data as below
+`HDL.rg` is the function to perform HDL method. The arguments for `HDL.rg` are the same as the above arguments for command-line implementation. Let's have a try with example data as below
 
 ``` r
 data(gwas1.example)
