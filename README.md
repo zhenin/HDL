@@ -45,6 +45,25 @@ cd HDL
 Rscript HDL.install.R
 ```
 
+Once the installation has completed, you can print out the version information by running `HDL.run.R` without any argument:
+
+``` r
+Rscript HDL.run.R
+```
+
+    ## HDL: High-definition likelihood inference of genetic correlations
+    ## (HDL)
+
+    ## Version 1.1 (2020-02-17) installed
+
+    ## Author: Zheng Ning, Xia Shen
+
+    ## Maintainer: Zheng Ning <zheng.ning@ki.se>
+
+    ## Tutorial: https://github.com/zhenin/HDL
+
+    ## Use citation("HDL") to know how to cite this work.
+
 #### R user
 
 You can use the `install_github` function in `devtools` package to install `HDL` from Github:

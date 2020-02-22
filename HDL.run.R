@@ -1,4 +1,8 @@
 args <- commandArgs(trailingOnly = TRUE)
+if(length(args) == 0){
+  library(HDL)
+  q()
+}
 gwas1.df.path <- gsub(x = args[grep(x = args, pattern = "gwas1.df=")], pattern = "gwas1.df=", replacement = "")
 gwas2.df.path <- gsub(x = args[grep(x = args, pattern = "gwas2.df=")], pattern = "gwas2.df=", replacement = "")
 LD.path <- gsub(x = args[grep(x = args, pattern = "LD.path=")], pattern = "LD.path=", replacement = "")
@@ -7,8 +11,6 @@ N0 <- gsub(x = args[grep(x = args, pattern = "N0=")], pattern = "N0=", replaceme
 output.file <- gsub(x = args[grep(x = args, pattern = "output.file=")], pattern = "output.file=", replacement = "")
 
 
-# gwas1.df.path <- "/Users/zhengning/Work/HDL/package/HDL_examples/gwas1.example.txt"
-# gwas2.df.path <- "/Users/zhengning/Work/HDL/package/HDL_examples/gwas2.example.rds"
 smart.reader <- function(path){
   path.split <- unlist(strsplit(path, split = "\\."))
   file.type <- path.split[length(path.split)]
