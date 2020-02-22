@@ -58,82 +58,11 @@ and load the package via:
 library(HDL)
 ```
 
-Estimating genetic correlation using HDL
-----------------------------------------
-
-To illustrate how to use `HDL`, we include two cleaned UKB GWAS summary statistics datasets as examples. `gwas1.example.rda` is for birth weight; `gwas2.example.rda` is for type 2 diabetes. More examples for imputed reference panel can be found [here](https://www.dropbox.com/sh/tdue80pjng9c45a/AACK4vyWgHLKPNL1JB6hWOD9a?dl=0).
-
-#### Command line user
-
-Next, you can simply run `HDL.run.R` like below to use `HDL` tool:
-
-``` r
-Rscript HDL.run.R \
-gwas1.df=gwas1.example.rds \
-gwas2.df=gwas2.example.rds \
-LD.path=/Your_path/UKB_array_SVD_eigen90_extraction \
-output.file=test.Rout
-```
-
-There are several arguments you should pass to `HDL`. **Please note that when you specify arguments, there should not be any space on any side of `=`.**
-
-*   Mandatory arguments
-    +   `gwas1.df`, the file of the GWAS results for trait 1, the extension should be .rds or .txt;
-    +   `gwas2.df`, the file of the GWAS results for trait 2, the extension should be .rds or .txt;
-    +   `LD.path`, the path to the directory where linkage disequilibrium (LD) information is stored.
-*   Optional arguments
-    +   `output.file`, where the log and results should be written. If you do not specify a file, the log will be printed in the console;
-    +   `Nref`, the sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 336000;
-    +   `N0`, the number of individuals included in both cohorts. However, the estimated genetic correlation is usually robust against misspecified N0. If not given, the default value is set to the minimum sample size across all SNPs in cohort 1 and cohort 2.
-
-#### R user
-
-`HDL.rg` is the function to perform HDL method. The arguments for `HDL.rg` are the same as the above arguments for command-line implementation. Let's have a try with example data as below
-
-``` r
-data(gwas1.example)
-data(gwas2.example)
-LD.path <- "/Users/zhengning/Work/HDL/package/UKB_array_SVD_eigen90_extraction"
-res.HDL <- HDL.rg(gwas1.example, gwas2.example, LD.path)
-res.HDL
-```
-
-A list is returned with
-
--   `rg`, the estimation of genetic correlation.
--   `rg.se`, the standard error of estimated genetic correlation.
--   `P`, the Wald test P-value for `rg`.
 
 For direct R documentation of `HDL.rg` function, you can use a question mark in R:
 
 ``` r
 ?HDL.rg
-```
-
-Reading HDL results
--------------------
-
-
-The first section gives the proportion of overlap SNPs between GWAS summary statistics and reference panel. A low SNP overlap may lead to poor estimation.
-
-``` r
-Analysis starts 
-307519 out of 307519 (100%) SNPs in reference panel are available in GWAS 1.  
-307519 out of 307519 (100%) SNPs in reference panel are available in GWAS 2.  
-```
-
-The following section shows whether the estimated rg is within (-1,1). If not, we switch to an algorithm that guarantees a constrained estimate.
-
-``` r
-Integrating piecewise results 
-Estimated rg is within (-1,1). Continuing computing standard error. 
-```
-
-The last section gives the genetic correlation, its standard error, and P-value based on the Wald test.
-
-``` r
-Genetic Correlation:  -0.2354 (0.0444)
-P:  1.146e-07
 ```
 
 For Help
