@@ -71,7 +71,7 @@ Next, you can simply run `HDL.run.R` like below to use `HDL` tool:
 Rscript HDL.run.R \
 gwas1.df=gwas1.example.rds \
 gwas2.df=gwas2.example.rds \
-LD.path=/Your_path/UKB_SVD_eigen90_extraction \
+LD.path=/Your_path/UKB_array_SVD_eigen90_extraction \
 output.file=test.Rout
 ```
 
@@ -93,7 +93,7 @@ There are several arguments you should pass to `HDL`. **Please note that when yo
 ``` r
 data(gwas1.example)
 data(gwas2.example)
-LD.path <- "/Users/zhengning/Work/HDL/package/UKB_SVD_eigen90_extraction"
+LD.path <- "/Users/zhengning/Work/HDL/package/UKB_array_SVD_eigen90_extraction"
 res.HDL <- HDL.rg(gwas1.example, gwas2.example, LD.path)
 res.HDL
 ```

@@ -47,7 +47,7 @@
 #' data(gwas2.example)
 #' 
 #' ## The path to the directory where linkage disequilibrium (LD) information is stored.
-#' LD.path <- "/Users/zhengning/Work/HDL/package/UKB_SVD_eigen90_extraction"
+#' LD.path <- "/Users/zhengning/Work/HDL/package/UKB_array_SVD_eigen90_extraction"
 #' 
 #' res.HDL <- HDL.rg(gwas1.example, gwas2.example, LD.path)
 #' res.HDL
@@ -243,7 +243,7 @@ HDL.rg <-
     
     ## rg is sensible
     if(abs(rg) <1){
-      cat("Estimated rg is within (-1,1). Continuing computing standard error. \n")
+      cat("The estimated rg is within (-1,1). Continuing computing standard error. \n")
       set.seed(510)
       rg.jackknife <- length(lam.v)
       for(i in 1:length(lam.v)){
@@ -278,7 +278,7 @@ HDL.rg <-
       P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
     } else{
       ## rg is not sensible, switch to full likelihood for rg estimation, slower
-      cat("Estimated rg beyonds (-1,1). Switching to full likelihood. \n")
+      cat("The estimated rg beyonds (-1,1). Switching to full likelihood. \n")
       opt=  optim(c(0.5,1, 0.5,1, sign(rg)*0.2, rho12), llfun.rg.full.likelihood, 
                   M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref, 
                   lam1=unlist(lam.v), lam2=unlist(lam.v),
