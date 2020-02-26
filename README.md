@@ -11,19 +11,7 @@ In [the wiki](https://github.com/zhenin/HDL/wiki), we provide a detailed tutoria
 What data are required?
 -----------------------
 
--   `gwas1.df` A data frame including GWAS summary statistics of genetic variants for trait 1. The input data frame should include following columns: `SNP`, SNP ID; `A1`, effect allele; `A2`, reference allele; `N`, sample size; `Z`, z-score; If `Z` is not given, alternatively, you may provide: `b`, estimate of marginal effect in GWAS; `se`, standard error of the estimates of marginal effects in GWAS. The summary statistics should look like this:
-
-<!-- -->
-
-    ##          SNP A1 A2      N        b       se      Z
-    ## 1  rs3131962  G  A 205475 0.001004 0.004590 0.2187
-    ## 2 rs12562034  A  G 205475 0.005382 0.005011 1.0740
-    ## 3 rs11240779  A  G 205475 0.002259 0.003691 0.6119
-    ## 4 rs57181708  G  A 205475 0.005401 0.005114 1.0562
-    ## 5  rs4422948  G  A 205475 0.005368 0.003604 1.4893
-    ## 6  rs4970383  A  C 205475 0.004685 0.003582 1.3080
-
-*   `gwas2.df` A data frame including GWAS summary statistics of genetic variants for trait 2. The format is the same as `gwas1.df`.
+-   `gwas1.df` and `gwas2.df`, which are two datasets including GWAS summary statistics of genetic variants for two traits. [This page](https://github.com/zhenin/HDL/wiki/Format-of-summary-statistics) describes the format of summary statistics for `HDL`, and how to perform data wrangling.
 
 *   The eigenvalues and eigenvectors of LD matrices. For the European-ancestry population, 
 we have computed the LD matrices and their eigen-decomposition from 336,000 Genomic British individuals in UK Biobank. 
