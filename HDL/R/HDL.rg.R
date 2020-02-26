@@ -58,7 +58,7 @@
 HDL.rg <-
   function(gwas1.df, gwas2.df, LD.path, Nref = 336000, N0 = min(gwas1.df$N, gwas2.df$N), output.file = ""){
     
-    cat("Analysis starts at",date(),"\n")
+    cat("Analysis starts on",date(),"\n")
     setwd(LD.path)
     if(file.exists("overlap.snp.MAF.05.list.rda")){
       load(file="UKB_snp_counter_overlap_MAF_5.RData")
@@ -76,9 +76,15 @@ HDL.rg <-
     k2 <- sum(gwas2.df$SNP %in% overlap.snp.MAF.05.list)
     k1.percent <- paste("(",round(100*k1 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
     k2.percent <- paste("(",round(100*k2 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
+
     cat(k1, "out of", length(overlap.snp.MAF.05.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n")
     cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n")
-    
+    if(k1 < length(overlap.snp.MAF.05.list)*0.99){
+      stop("More than 1% SNPs in reference panel are missed in GWAS 1. Please check.")
+    }
+    if(k2 < length(overlap.snp.MAF.05.list)*0.99){
+      stop("More than 1% SNPs in reference panel are missed in GWAS 2. Please check.")
+    }
     
     ## stats
     N1 <- max(gwas1.df[, "N"])

@@ -1,7 +1,7 @@
 Package: HDL
 Type: Package
 Title: High-definition likelihood inference of genetic correlations (HDL)
-Version: 1.1
+Version: 1.1.1
 Date: 2020-02-17
 Author: Zheng Ning, Xia Shen
 Maintainer: Zheng Ning <zheng.ning@ki.se>
