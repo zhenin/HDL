@@ -1,6 +1,8 @@
 ##### Install HDL #####
-if(!require("dplyr",character.only = TRUE)){
-    install.packages("dplyr",dependencies=TRUE)
+if(!"devtools" %in% rownames(installed.packages())){
+    install.packages("devtools",dependencies=TRUE)
   }
+library(devtools)
+install_github("zhenin/HDL/HDL")
 
-system("R CMD install HDL")
+
