@@ -207,7 +207,7 @@ HDL.rg <-
           counter <- counter + 1
           value <- round(counter/num.pieces*100)
           backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-          message <- paste("Estimation is ongoing...", value, "%", sep = "", 
+          message <- paste("Estimation is ongoing ... ", value, "%", sep = "", 
                            collapse = "")
           cat(backspaces, message, sep = "")
         }
@@ -275,7 +275,7 @@ HDL.rg <-
           counter <- counter + 1
           value <- round(counter/length(lam.v)*100)
           backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-          message <- paste("Progress...", value, "%", sep = "", 
+          message <- paste("Progress... ", value, "%", sep = "", 
                            collapse = "")
           cat(backspaces, message, sep = "")
         }
@@ -326,7 +326,7 @@ HDL.rg <-
           counter <- counter + 1
           value <- round(counter/length(lam.v)*100)
           backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-          message <- paste("Progress...", value, "%", sep = "", 
+          message <- paste("Progress... ", value, "%", sep = "", 
                            collapse = "")
           cat(backspaces, message, sep = "")
         }

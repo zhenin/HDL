@@ -1,6 +1,6 @@
 library(dplyr)
 args <- commandArgs(trailingOnly = TRUE)
-fn <- gsub(x = args[grep(x = args, pattern = "gwas.path=")], pattern = "gwas.path=", replacement = "")
+fn <- gsub(x = args[grep(x = args, pattern = "gwas.file=")], pattern = "gwas.file=", replacement = "")
 LD.path <- gsub(x = args[grep(x = args, pattern = "LD.path=")], pattern = "LD.path=", replacement = "")
 GWAS.type <- gsub(x = args[grep(x = args, pattern = "GWAS.type=")], pattern = "GWAS.type=", replacement = "")
 output.file <- gsub(x = args[grep(x = args, pattern = "output.file=")], pattern = "output.file=", replacement = "")
@@ -19,7 +19,12 @@ if(length(output.file) == 0)
 cat("Program starts on",date(),"\n")
 cat("Loading GWAS summary statistics from ",fn,"\n")
 
-gwas.all <- read.table(fn, header = T)
+if(summary(file(fn))$class == "gzfile"){
+  gwas.all <- read.table(gzfile(fn), header = T)
+} else{
+  gwas.all <- read.table(fn, header = T)
+}
+
 cat("Data is loaded successfully. Data wrangling starts. \n")
 
 
