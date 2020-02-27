@@ -62,6 +62,19 @@ HDL.rg <-
       if(file.exists(output.file) == T){
         system(paste0("rm ",output.file))
       }
+      pkgDescription <- packageDescription("HDL")
+      pkgVersion <- pkgDescription$Version
+      pkgDate <- pkgDescription$Date
+      pkgName <- pkgDescription$Package
+      pkgTitle <- pkgDescription$Title
+      pkgAuthor <- pkgDescription$Author
+      pkgMaintainer <- pkgDescription$Maintainer
+      cat(paste("\n", pkgName, ": ", pkgTitle, "\n", sep = ""), file = output.file, append = T)
+      cat(paste("Version ", pkgVersion, " (", pkgDate, ") installed", "\n", sep = ""), file = output.file, append = T)
+      cat(paste("Author: ", pkgAuthor, "\n", sep = ""), file = output.file, append = T)
+      cat(paste("Maintainer: ", pkgMaintainer, "\n", sep = ""), file = output.file, append = T)
+      cat('Tutorial: https://github.com/zhenin/HDL\n', file = output.file, append = T)
+      cat('Use citation("HDL") to know how to cite this work.\n\n', file = output.file, append = T)
     }
     time.start <- date()
     cat("Analysis starts on",time.start,"\n")
