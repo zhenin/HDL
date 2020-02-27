@@ -45,9 +45,6 @@ if(length(N0) == 0)
 
 
 ##### Run HDL #####
-if(output.file != ""){
-  capture.output(library(HDL), type = "message", file = output.file)
-} else{
+
   library(HDL)
-}
   res.HDL <- HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file)
