@@ -12,7 +12,7 @@
 #' @param Nref Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 336000.
 #' @param N0 Number of individuals included in both cohorts. However, the estimated genetic correlation is usually robust against misspecified N0. 
 #' If not given, the default value is set to the minimum sample size across all SNPs in cohort 1 and cohort 2.
-#' @param output.file In current version, this argument is only for the convinience of command line user. 
+#' @param output.file Where the log and results should be written. If you do not specify a file, the log will be printed on the console.
 #' 
 #' @note Users can download the eigenvalues and eigenvectors of LD correlation matrices from https://www.dropbox.com/sh/ai2o21gxklhlvs3/AABPD7nKv3nXcvmoQQ3cGh9Qa?dl=0. 
 #' These are the LD matrices and their eigen-decomposition from 336,000 genomic British UK Biobank individuals. Two sets of reference panel are provided: 
@@ -58,7 +58,16 @@
 HDL.rg <-
   function(gwas1.df, gwas2.df, LD.path, Nref = 336000, N0 = min(gwas1.df$N, gwas2.df$N), output.file = ""){
     
-    cat("Analysis starts on",date(),"\n")
+    if(output.file != ""){
+      if(file.exists(output.file) == T){
+        system(paste0("rm ",output.file))
+      }
+    }
+    time.start <- date()
+    cat("Analysis starts on",time.start,"\n")
+    if(output.file != ""){
+      cat("Analysis starts on",time.start,"\n", file = output.file, append = T)
+    }
     setwd(LD.path)
     if(file.exists("overlap.snp.MAF.05.list.rda")){
       load(file="UKB_snp_counter_overlap_MAF_5.RData")
@@ -69,7 +78,11 @@ HDL.rg <-
       overlap.snp.MAF.05.list <- snps.list.imputed.vector
       nsnps.list <- nsnps.list.imputed
     } else{
-      stop("It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels.")
+      error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
     }
     
     k1 <- sum(gwas1.df$SNP %in% overlap.snp.MAF.05.list)
@@ -79,11 +92,23 @@ HDL.rg <-
 
     cat(k1, "out of", length(overlap.snp.MAF.05.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n")
     cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n")
+    if(output.file != ""){
+      cat(k1, "out of", length(overlap.snp.MAF.05.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n", file = output.file, append = T)
+      cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n", file = output.file, append = T)
+    }
     if(k1 < length(overlap.snp.MAF.05.list)*0.99){
-      stop("More than 1% SNPs in reference panel are missed in GWAS 1. Please check.")
+      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 1. Please check."
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
     }
     if(k2 < length(overlap.snp.MAF.05.list)*0.99){
-      stop("More than 1% SNPs in reference panel are missed in GWAS 2. Please check.")
+      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. Please check."
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
     }
     
     ## stats
@@ -203,14 +228,14 @@ HDL.rg <-
         lam.v <- c(lam.v, list(lam))
         
         ## Report progress ##
-        if(output.file == ""){
-          counter <- counter + 1
-          value <- round(counter/num.pieces*100)
-          backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-          message <- paste("Estimation is ongoing ... ", value, "%", sep = "", 
-                           collapse = "")
-          cat(backspaces, message, sep = "")
-        }
+ 
+        counter <- counter + 1
+        value <- round(counter/num.pieces*100)
+        backspaces <- paste(rep("\b", nchar(message)), collapse = "")
+        message <- paste("Estimation is ongoing ... ", value, "%", sep = "", 
+                         collapse = "")
+        cat(backspaces, message, sep = "")
+        
       }
     }
     cat("\n")
@@ -223,7 +248,12 @@ HDL.rg <-
     
     ##### Estimated likelihood for h12 + h11,h22 independent #####
     
+    cat("\n")
     cat("Integrating piecewise results \n")
+    if(output.file != ""){
+      cat("\n", file = output.file, append = T)
+      cat("Integrating piecewise results \n", file = output.file, append = T)
+    }
     M.ref <- sum(unlist(nsnps.list))
     opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar1.v), M=M.ref,
                 lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
@@ -250,6 +280,9 @@ HDL.rg <-
     ## rg is sensible
     if(abs(rg) <1){
       cat("The estimated rg is within (-1,1). Continuing computing standard error. \n")
+      if(output.file != ""){
+        cat("The estimated rg is within (-1,1). Continuing computing standard error. \n", file = output.file, append = T)
+      }
       set.seed(510)
       rg.jackknife <- length(lam.v)
       for(i in 1:length(lam.v)){
@@ -271,20 +304,23 @@ HDL.rg <-
         rg.jackknife[i] <- h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1])
         
         ## Report progress ##
-        if(output.file == ""){
-          counter <- counter + 1
-          value <- round(counter/length(lam.v)*100)
-          backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-          message <- paste("Progress... ", value, "%", sep = "", 
-                           collapse = "")
-          cat(backspaces, message, sep = "")
-        }
+        
+        counter <- counter + 1
+        value <- round(counter/length(lam.v)*100)
+        backspaces <- paste(rep("\b", nchar(message)), collapse = "")
+        message <- paste("Progress... ", value, "%", sep = "", 
+                         collapse = "")
+        cat(backspaces, message, sep = "")
+        
       }
       rg.se <-  sqrt(mean((rg.jackknife - mean(rg.jackknife))^2)*(length(rg.jackknife) - 1))
       P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
     } else{
       ## rg is not sensible, switch to full likelihood for rg estimation, slower
       cat("The estimated rg beyonds (-1,1). Switching to full likelihood. \n")
+      if(output.file != ""){
+        cat("The estimated rg beyonds (-1,1). Switching to full likelihood. \n", file = output.file, append = T)
+      }
       opt=  optim(c(0.5,1, 0.5,1, sign(rg)*0.2, rho12), llfun.rg.full.likelihood, 
                   M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref, 
                   lam1=unlist(lam.v), lam2=unlist(lam.v),
@@ -311,6 +347,9 @@ HDL.rg <-
       rg <- rg.full.likelihood[5]
       
       cat("rg is within (-1,1) now. Continuing computing standard error. \n")
+      if(output.file != ""){
+        cat("rg is within (-1,1) now. Continuing computing standard error. \n", file = output.file, append = T)
+      }
       set.seed(510)
       rg.jackknife <- length(lam.v)
       for(i in 1:length(lam.v)){
@@ -322,21 +361,63 @@ HDL.rg <-
         rg.jackknife[i] <- opt$par[5]
         
         ## Report progress ##
-        if(output.file == ""){
-          counter <- counter + 1
-          value <- round(counter/length(lam.v)*100)
-          backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-          message <- paste("Progress... ", value, "%", sep = "", 
-                           collapse = "")
-          cat(backspaces, message, sep = "")
-        }
+
+        counter <- counter + 1
+        value <- round(counter/length(lam.v)*100)
+        backspaces <- paste(rep("\b", nchar(message)), collapse = "")
+        message <- paste("Progress... ", value, "%", sep = "", 
+                         collapse = "")
+        cat(backspaces, message, sep = "")
+        
       }
       rg.se <-  sqrt(mean((rg.jackknife - mean(rg.jackknife))^2)*(length(rg.jackknife) - 1))
       P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
     }
-    cat("\n")
-    if(output.file == ""){
-      cat("Analysis finished at",date(),"\n")
+    
+    
+      if(abs(rg) < 1e-4){
+        rg.out <- formatC(rg, format = "e", digits = 2)
+      } else{
+        rg.out <- round(rg, digits = 4)
+      }
+      
+      if(rg.se < 1e-4){
+        rg.se.out <- formatC(rg.se, format = "e", digits = 2)
+      } else{
+        rg.se.out <- round(rg.se, digits = 4)
+      }
+      
+      p.out <- formatC(P, format = "e", digits = 2)
+      
+      end.time <- date()
+      cat("\n")
+      cat("\n")
+      cat("Genetic Correlation: ", 
+          rg.out, 
+          paste0("(", rg.se.out, ")"))
+      cat("\n")
+      cat("P: ",p.out)
+      cat("\n")
+      cat("\n")
+      cat("Analysis finished at",end.time,"\n")
+      
+      if(output.file != ""){
+      cat("\n", file = output.file, append = TRUE)
+      cat("\n", file = output.file, append = TRUE)
+      cat("Genetic Correlation: ", 
+          rg.out, 
+          paste0("(", rg.se.out, ")"), 
+          file = output.file, append = TRUE)
+      cat("\n", file = output.file, append = TRUE)
+      cat("P: ",p.out, file = output.file, append = TRUE)
+      cat("\n", file = output.file, append = TRUE)
+      cat("\n", file = output.file, append = TRUE)
+      cat("Analysis finished at",end.time,"\n", file = output.file, append = TRUE)
+      cat("The results were saved to", output.file)
+      cat("\n")
+      cat("The results were saved to", output.file, file = output.file, append = TRUE)
+      cat("\n", file = output.file, append = TRUE)
     }
+    
     return(list(rg = rg, rg.se = rg.se, P = P))
   }
