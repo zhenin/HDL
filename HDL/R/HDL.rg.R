@@ -81,13 +81,13 @@ HDL.rg <-
     if(output.file != ""){
       cat("Analysis starts on",time.start,"\n", file = output.file, append = T)
     }
-    setwd(LD.path)
-    if(file.exists("overlap.snp.MAF.05.list.rda")){
-      load(file="UKB_snp_counter_overlap_MAF_5.RData")
-      load(file="overlap.snp.MAF.05.list.rda")
-    } else if(file.exists("UKB_snp_list_imputed.vector_form.RData")){
-      load(file="UKB_snp_counter_imputed.RData")
-      load(file="UKB_snp_list_imputed.vector_form.RData")
+    
+    if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
+      load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
+      load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
+    } else if(file.exists(paste0(LD.path, "UKB_snp_list_imputed.vector_form.RData"))){
+      load(file=paste0(LD.path, "/UKB_snp_counter_imputed.RData"))
+      load(file=paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))
       overlap.snp.MAF.05.list <- snps.list.imputed.vector
       nsnps.list <- nsnps.list.imputed
     } else{
@@ -145,12 +145,12 @@ HDL.rg <-
         
         ## reference sample ##
         
-        if(file.exists("overlap.snp.MAF.05.list.rda")){
-          load(file=paste0("ukb_chr",chr,".",piece,"_n336000_500banded_90eigen.rda"))
-          snps.ref.df <- read.table(paste0("ukb_chr",chr,".",piece,"_n336000.bim"))
-        } else if(file.exists("UKB_snp_list_imputed.vector_form.RData")){
-          load(file=paste0("ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
-          snps.ref.df <- read.table(paste0("ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
+        if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
+          load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000_500banded_90eigen.rda"))
+          snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.bim"))
+        } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
+          load(file=paste0(LD.path, "/ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
+          snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
         }
         colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
         snps.ref <- snps.ref.df$id
