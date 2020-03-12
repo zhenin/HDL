@@ -98,7 +98,7 @@ HDL.rg <-
     if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
       load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
       load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
-    } else if(file.exists(paste0(LD.path, "UKB_snp_list_imputed.vector_form.RData"))){
+    } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
       load(file=paste0(LD.path, "/UKB_snp_counter_imputed.RData"))
       load(file=paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))
       overlap.snp.MAF.05.list <- snps.list.imputed.vector
