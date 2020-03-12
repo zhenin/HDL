@@ -147,7 +147,9 @@ HDL.rg <-
     ## samples for phenotypes
     p1 <- N0/N1
     p2 <- N0/N2
-    rho12 <- cor(gwas1.df$Z, gwas2.df$Z, use = "complete.obs") 
+    
+    rho12 <- suppressWarnings(inner_join(gwas1.df %>% select(SNP, Z), gwas2.df %>% select(SNP, Z), by = "SNP") %>%
+                                summarise(x=cor(Z.x, Z.y, use = "complete.obs")) %>% unlist)
     
     bstar1.v <- bstar2.v <- lam.v <- list()
     HDL11.df <- HDL12.df <- HDL22.df <- names.row <- NULL
