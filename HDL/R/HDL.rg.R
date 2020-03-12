@@ -127,14 +127,14 @@ HDL.rg <-
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
-      warning(error.message)
+      cat(error.message)
     }
     if(k2 < length(overlap.snp.MAF.05.list)*0.99){
       error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please check."
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
-      warning(error.message)
+      cat(error.message)
     }
     
     
