@@ -82,6 +82,19 @@ HDL.rg <-
       cat("Analysis starts on",time.start,"\n", file = output.file, append = T)
     }
     
+    if(!("Z" %in% colnames(gwas1.df))){
+      if(("b" %in% colnames(gwas1.df)) && ("se" %in% colnames(gwas1.df))){
+        gwas1.df$Z <- gwas1.df$b / gwas1.df$se
+      } else{
+        error.message <- "Z is not available, meanwhile either b or se is missing. Please check."
+        if(output.file != ""){
+          cat(error.message, file = output.file, append = T)
+        }
+        stop(error.message)
+      
+      }
+    }
+    
     if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
       load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
       load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
@@ -110,19 +123,21 @@ HDL.rg <-
       cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n", file = output.file, append = T)
     }
     if(k1 < length(overlap.snp.MAF.05.list)*0.99){
-      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 1. Please check."
+      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 1. This may generate bias in estimation. Please check."
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
-      stop(error.message)
+      warning(error.message)
     }
     if(k2 < length(overlap.snp.MAF.05.list)*0.99){
-      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. Please check."
+      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please check."
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
-      stop(error.message)
+      warning(error.message)
     }
+    
+    
     
     ## stats
     N1 <- max(gwas1.df[, "N"])

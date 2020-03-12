@@ -27,6 +27,8 @@ smart.reader <- function(path){
     return(readRDS(path))
   } else if(file.type == "txt"){
     return(read.table(file = path, header = T))
+  } else if(file.type == "sumstats"){
+    return(read.table(file = path, header = T))
   } else{
     error.message <- "The extension of input file has to be .rds or .txt!"
     if(output.file != ""){
