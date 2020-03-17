@@ -126,6 +126,8 @@ if(k1 < length(overlap.snp.MAF.05.list)*0.99){
   }
 }
 
+gwas.hdl.df$A1 <- toupper(gwas.hdl.df$A1)
+gwas.hdl.df$A2 <- toupper(gwas.hdl.df$A2)
 
 fn.rds <- paste0(output.file, ".hdl.rds")
 saveRDS(gwas.hdl.df, fn.rds)
