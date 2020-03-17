@@ -95,6 +95,19 @@ HDL.rg <-
       }
     }
     
+    if(!("Z" %in% colnames(gwas2.df))){
+      if(("b" %in% colnames(gwas2.df)) && ("se" %in% colnames(gwas2.df))){
+        gwas2.df$Z <- gwas2.df$b / gwas2.df$se
+      } else{
+        error.message <- "Z is not available, meanwhile either b or se is missing. Please check."
+        if(output.file != ""){
+          cat(error.message, file = output.file, append = T)
+        }
+        stop(error.message)
+        
+      }
+    }
+    
     if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
       load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
       load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
@@ -180,29 +193,29 @@ HDL.rg <-
         colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
         snps.ref <- snps.ref.df$id
         A2.ref <- snps.ref.df$A2
+        names(A2.ref) <- snps.ref
         
         gwas1.df.subset <- gwas1.df %>% filter(SNP %in% snps.ref)
-        gwas2.df.subset <- gwas2.df %>% filter(SNP %in% snps.ref)
-        
-        nonmissing1 <- which(snps.ref %in% gwas1.df.subset$SNP)
-        nonmissing2 <- which(snps.ref %in% gwas2.df.subset$SNP)
-        
-        # Nonmissing SNPs 
-        bhat1.0 <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])  
-        bhat2.0 <- gwas2.df.subset[, "Z"] / sqrt(gwas2.df.subset[, "N"])  
+        bhat1.raw <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])
         A2.gwas1 <- gwas1.df.subset[, "A2"]
-        A2.gwas2 <- gwas2.df.subset[, "A2"]
+        names(bhat1.raw) <- names(A2.gwas1) <- gwas1.df.subset$SNP
+        idx.sign1 <- A2.gwas1 == A2.ref[names(A2.gwas1)]
+        bhat1.raw <- bhat1.raw*(2*as.numeric(idx.sign1)-1)
         
-        idx.sign1 <- A2.gwas1 == A2.ref[nonmissing1]
-        idx.sign2 <- A2.gwas2 == A2.ref[nonmissing2]
-        bhat1.0 <- bhat1.0*(2*as.numeric(idx.sign1)-1)
-        bhat2.0 <- bhat2.0*(2*as.numeric(idx.sign2)-1)
+        gwas2.df.subset <- gwas2.df %>% filter(SNP %in% snps.ref)
+        bhat2.raw <- gwas2.df.subset[, "Z"] / sqrt(gwas2.df.subset[, "N"])
+        A2.gwas2 <- gwas2.df.subset[, "A2"]
+        names(bhat2.raw) <- names(A2.gwas2) <- gwas2.df.subset$SNP
+        idx.sign2 <- A2.gwas2 == A2.ref[names(A2.gwas2)]
+        bhat2.raw <- bhat2.raw*(2*as.numeric(idx.sign2)-1)
         
         M <- length(LDsc)
         bhat1 <- bhat2 <- numeric(M)
-        bhat1[nonmissing1] <- bhat1.0
-        bhat2[nonmissing2] <- bhat2.0
+        names(bhat1) <- names(bhat2) <- snps.ref
+        bhat1[names(bhat1.raw)] <- bhat1.raw
+        bhat2[names(bhat2.raw)] <- bhat2.raw
         
+
         a11 <- bhat1**2
         a22 <- bhat2**2
         a12 <- bhat1*bhat2
