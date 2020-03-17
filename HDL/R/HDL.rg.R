@@ -103,6 +103,11 @@ HDL.rg <-
       load(file=paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))
       overlap.snp.MAF.05.list <- snps.list.imputed.vector
       nsnps.list <- nsnps.list.imputed
+    } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
+      load(file=paste0(LD.path, "/UKB_snp_counter_imputed.hapmap2.RData"))
+      load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
+      overlap.snp.MAF.05.list <- snps.list.imputed.vector
+      nsnps.list <- nsnps.list.imputed
     } else{
       error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
       if(output.file != ""){
@@ -123,14 +128,14 @@ HDL.rg <-
       cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n", file = output.file, append = T)
     }
     if(k1 < length(overlap.snp.MAF.05.list)*0.99){
-      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 1. This may generate bias in estimation. Please check."
+      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 1. This may generate bias in estimation. Please make sure that you are using correct reference panel."
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
       cat(error.message)
     }
     if(k2 < length(overlap.snp.MAF.05.list)*0.99){
-      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please check."
+      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please make sure that you are using correct reference panel."
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
@@ -168,7 +173,10 @@ HDL.rg <-
         } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
           load(file=paste0(LD.path, "/ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
           snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
-        }
+        } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
+          load(file=paste0(LD.path, "/ukb_imputed_hapmap2_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
+          snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_clean.bim"))
+        } 
         colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
         snps.ref <- snps.ref.df$id
         A2.ref <- snps.ref.df$A2

@@ -55,6 +55,10 @@ if(length(GWAS.type) != 0){
       load(paste0(LD.path, "/snp.dictionary.imputed.rda"))
       load(file=paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))
       overlap.snp.MAF.05.list <- snps.list.imputed.vector
+    } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
+      load(paste0(LD.path, "/snp.dictionary.imputed.rda"))
+      load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
+      overlap.snp.MAF.05.list <- snps.list.imputed.vector
     } else{
       error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
       if(length(log.file) != 0){
@@ -63,7 +67,7 @@ if(length(GWAS.type) != 0){
       stop(error.message)
     }
     gwas.hdl.df <- gwas.all %>%
-      inner_join(snp.dictionary, by = "variant")  %>%
+      inner_join(snp.dictionary %>% filter(rsid %in% overlap.snp.MAF.05.list), by = "variant")  %>%
       select(rsid, alt, ref, n_complete_samples, tstat) %>%
       rename(SNP = rsid, A1 = alt, A2 = ref, N = n_complete_samples, Z = tstat)
   }
@@ -82,6 +86,9 @@ if(length(GWAS.type) == 0){
     load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
   } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
     load(file=paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))
+    overlap.snp.MAF.05.list <- snps.list.imputed.vector
+  } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
+    load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
     overlap.snp.MAF.05.list <- snps.list.imputed.vector
   } else{
     error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
