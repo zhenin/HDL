@@ -351,15 +351,17 @@ HDL.rg <-
       lam.v.use <- lam.v
       bstar1.v.use <- bstar1.v
       bstar2.v.use <- bstar2.v
-      h11 <- h11.hdl.use <- h11.hdl.99
-      h22 <- h22.hdl.use <- h22.hdl.99
+      h11.hdl.use <- h11.hdl.99
+      h22.hdl.use <- h22.hdl.99
     } else{
       lam.v.use <- lam.v.90
       bstar1.v.use <- bstar1.v.90
       bstar2.v.use <- bstar2.v.90
-      h11 <- h11.hdl.use <- h11.hdl.90
-      h22 <- h22.hdl.use <- h22.hdl.90
+      h11.hdl.use <- h11.hdl.90
+      h22.hdl.use <- h22.hdl.90
     }
+    h11 <- h11.hdl.use[1]
+    h22 <- h22.hdl.use[1]
     opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
                 rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                 lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
@@ -376,7 +378,6 @@ HDL.rg <-
     message <- ""
     rg.jackknife <- h11.jackknife <- h12.jackknife <- h22.jackknife <- length(lam.v)
     for(i in 1:length(lam.v)){
-      cat(i, "\n")
       opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
                   lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.jackknife = opt$par
