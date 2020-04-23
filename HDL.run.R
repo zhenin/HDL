@@ -41,12 +41,14 @@ message <- "Loading GWAS1 ... \n"
 if(output.file != ""){
   cat(message, file = output.file, append = T)
 }
+cat(message)
 gwas1.df <- smart.reader(gwas1.df.path)
 
 message <- "Loading GWAS2 ... \n"
 if(output.file != ""){
   cat(message, file = output.file, append = T)
 }
+cat(message)
 gwas2.df <- smart.reader(gwas2.df.path)
 
 if(length(Nref)==0)

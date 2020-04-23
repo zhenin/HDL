@@ -40,9 +40,9 @@ if(summary(file(fn))$class == "gzfile"){
   gwas.all <- read.table(fn, header = T)
 }
 
-cat("Data is loaded successfully. Data wrangling starts. \n")
+cat("Data are loaded successfully. Data wrangling starts. \n")
 if(length(log.file) != 0){
-  cat("Data is loaded successfully. Data wrangling starts. \n", file = log.file, append = T)
+  cat("Data are loaded successfully. Data wrangling starts. \n", file = log.file, append = T)
 }
 
 ## the Neale's UKB GWAS format ##

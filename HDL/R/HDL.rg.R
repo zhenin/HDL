@@ -10,7 +10,7 @@
 #' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS.
 #' @param LD.path Path to the directory where linkage disequilibrium (LD) information is stored.
 #' @param Nref Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 336000.
-#' @param N0 Number of individuals included in both cohorts. However, the estimated genetic correlation is usually robust against misspecified N0. 
+#' @param N0 Number of individuals included in both cohorts. The estimated genetic correlation is usually robust against misspecified N0. 
 #' If not given, the default value is set to the minimum sample size across all SNPs in cohort 1 and cohort 2.
 #' @param output.file Where the log and results should be written. If you do not specify a file, the log will be printed on the console.
 #' 
@@ -26,13 +26,14 @@
 #' \item{rg }{The estimated genetic correlation.}
 #' \item{rg.se }{The standard error of the estimated genetic correlation.}
 #' \item{P }{P-value based on Wald test.}
+#' \item{estimates.df }{A detailed matrix includes the estimates and standard errors of heritabilities, genetic covariance and genetic correlation.}
 #' }
 #' 
 #' @author Zheng Ning
 #' 
 #' @references 
-#' Ning Z, Pawitan Y, Shen X (2019). High-definition likelihood inference of genetic correlations 
-#' across human complex traits. \emph{Submitted}.
+#' Ning Z, Pawitan Y, Shen X (2020). High-definition likelihood inference of genetic correlations 
+#' across human complex traits. \emph{Accepted by Nature Genetics, waiting for publishing}.
 #' 
 #' @seealso 
 #' HDL tutorial: https://github.com/zhenin/HDL
@@ -91,7 +92,7 @@ HDL.rg <-
           cat(error.message, file = output.file, append = T)
         }
         stop(error.message)
-      
+        
       }
     }
     
@@ -133,7 +134,7 @@ HDL.rg <-
     k2 <- sum(gwas2.df$SNP %in% overlap.snp.MAF.05.list)
     k1.percent <- paste("(",round(100*k1 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
     k2.percent <- paste("(",round(100*k2 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
-
+    
     cat(k1, "out of", length(overlap.snp.MAF.05.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n")
     cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n")
     if(output.file != ""){
@@ -158,8 +159,8 @@ HDL.rg <-
     
     
     ## stats
-    N1 <- max(gwas1.df[, "N"])
-    N2 <- max(gwas2.df[, "N"])
+    N1 <- median(gwas1.df[, "N"])
+    N2 <- median(gwas2.df[, "N"])
     N <- sqrt(N1)*sqrt(N2)
     
     ## samples for phenotypes
@@ -215,7 +216,7 @@ HDL.rg <-
         bhat1[names(bhat1.raw)] <- bhat1.raw
         bhat2[names(bhat2.raw)] <- bhat2.raw
         
-
+        
         a11 <- bhat1**2
         a22 <- bhat2**2
         a12 <- bhat1*bhat2
@@ -279,7 +280,7 @@ HDL.rg <-
         lam.v <- c(lam.v, list(lam))
         
         ## Report progress ##
- 
+        
         counter <- counter + 1
         value <- round(counter/num.pieces*100)
         backspaces <- paste(rep("\b", nchar(message)), collapse = "")
@@ -306,169 +307,187 @@ HDL.rg <-
       cat("Integrating piecewise results \n", file = output.file, append = T)
     }
     M.ref <- sum(unlist(nsnps.list))
-    opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar1.v), M=M.ref,
-                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-    h11.hdl = opt$par
-    
-    
-    opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar2.v), M=M.ref,
-                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-    h22.hdl = opt$par
-    
-    opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl, h22=h22.hdl,
-                rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
-                lam0=unlist(lam.v), lam1=unlist(lam.v), lam2=unlist(lam.v),
-                bstar1=unlist(bstar1.v), bstar2=unlist(bstar2.v),
-                lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
-    h12.hdl = opt$par
-    rg <- h12.hdl[1]/sqrt(h11.hdl[1]*h22.hdl[1])
-    
-    
-    ##### Check whether rg is sensible #####
-    counter <- 0
-    message <- ""
-    
-    ## rg is sensible
-    if(abs(rg) <1){
-      cat("The estimated rg is within (-1,1). Continuing computing standard error. \n")
-      if(output.file != ""){
-        cat("The estimated rg is within (-1,1). Continuing computing standard error. \n", file = output.file, append = T)
+    eigen.num.v.90 <- eigen.num.v.95 <- c()
+    nsnps.v <- unlist(nsnps.list)
+    for(i in 1:length(nsnps.v)){
+      lam.i <- lam.v[[i]]
+      eigen.percent <- numeric(length(lam.i))
+      temp <- 0
+      for(j in 1:length(lam.i)){
+        temp <- temp + lam.i[j]
+        eigen.percent[j] <- temp/nsnps.v[i]
       }
-      set.seed(510)
-      rg.jackknife <- length(lam.v)
-      for(i in 1:length(lam.v)){
-        opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v[-i]), bstar=unlist(bstar1.v[-i]), M=M.ref,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-        h11.hdl.jackknife = opt$par
-        
-        
-        opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v[-i]), bstar=unlist(bstar2.v[-i]), M=M.ref,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-        h22.hdl.jackknife = opt$par
-        
-        opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl, h22=h22.hdl,
-                    rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
-                    lam0=unlist(lam.v[-i]), lam1=unlist(lam.v[-i]), lam2=unlist(lam.v[-i]),
-                    bstar1=unlist(bstar1.v[-i]), bstar2=unlist(bstar2.v[-i]),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
-        h12.hdl.jackknife = opt$par
-        rg.jackknife[i] <- h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1])
-        
-        ## Report progress ##
-        
-        counter <- counter + 1
-        value <- round(counter/length(lam.v)*100)
-        backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-        message <- paste("Progress... ", value, "%", sep = "", 
-                         collapse = "")
-        cat(backspaces, message, sep = "")
-        
-      }
-      rg.se <-  sqrt(mean((rg.jackknife - mean(rg.jackknife))^2)*(length(rg.jackknife) - 1))
-      P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
-    } else{
-      ## rg is not sensible, switch to full likelihood for rg estimation, slower
-      cat("The estimated rg beyonds (-1,1). Switching to full likelihood. \n")
-      if(output.file != ""){
-        cat("The estimated rg beyonds (-1,1). Switching to full likelihood. \n", file = output.file, append = T)
-      }
-      opt=  optim(c(0.5,1, 0.5,1, sign(rg)*0.2, rho12), llfun.rg.full.likelihood, 
-                  M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref, 
-                  lam1=unlist(lam.v), lam2=unlist(lam.v),
-                  bstar1=unlist(bstar1.v), bstar2=unlist(bstar2.v),
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10))
-      if(opt$value > 1e5 | opt$convergence != 0){
-        opt=  optim(c(0.5,1, 0.5,1, sign(rg)*0.5, rho12), llfun.rg.full.likelihood, 
-                    M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref, 
-                    lam1=unlist(lam.v), lam2=unlist(lam.v),
-                    bstar1=unlist(bstar1.v), bstar2=unlist(bstar2.v),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10))
-      }
-      if(opt$value > 1e5 | opt$convergence != 0){
-        opt=  optim(c(0.5,1, 0.5,1, sign(rg)*0.8, rho12), llfun.rg.full.likelihood, 
-                    M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref, 
-                    lam1=unlist(lam.v), lam2=unlist(lam.v),
-                    bstar1=unlist(bstar1.v), bstar2=unlist(bstar2.v),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10))
-      }
-      if(opt$value > 1e5 | opt$convergence != 0){
-        stop("Algorithm fails to converge. It may because heritabilities are too small or genetic correlation is very close to 1.")
-      }
-      rg.full.likelihood <- opt$par
-      rg <- rg.full.likelihood[5]
+      eigen.num.90 <- which(eigen.percent > 0.9)[1]
+      eigen.num.95 <- which(eigen.percent > 0.95)[1]
       
-      cat("rg is within (-1,1) now. Continuing computing standard error. \n")
-      if(output.file != ""){
-        cat("rg is within (-1,1) now. Continuing computing standard error. \n", file = output.file, append = T)
-      }
-      set.seed(510)
-      rg.jackknife <- length(lam.v)
-      for(i in 1:length(lam.v)){
-        opt=  optim(rg.full.likelihood, llfun.rg.full.likelihood,
-                    M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
-                    lam1=unlist(lam.v[-i]), lam2=unlist(lam.v[-i]),
-                    bstar1=unlist(bstar1.v[-i]), bstar2=unlist(bstar2.v[-i]),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(rep(0,4),-1,-10), upper=c(1, 10, 1, 10, 1, 10))
-        rg.jackknife[i] <- opt$par[5]
-        
-        ## Report progress ##
-
-        counter <- counter + 1
-        value <- round(counter/length(lam.v)*100)
-        backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-        message <- paste("Progress... ", value, "%", sep = "", 
-                         collapse = "")
-        cat(backspaces, message, sep = "")
-        
-      }
-      rg.se <-  sqrt(mean((rg.jackknife - mean(rg.jackknife))^2)*(length(rg.jackknife) - 1))
-      P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
+      eigen.num.v.90 <- c(eigen.num.v.90, eigen.num.90)
+      eigen.num.v.95 <- c(eigen.num.v.95, eigen.num.95)
     }
     
+    eigen_select.fun <- function(x,k){
+      return(x[1:k])
+    }
     
-      if(abs(rg) < 1e-4){
-        rg.out <- formatC(rg, format = "e", digits = 2)
-      } else{
-        rg.out <- round(rg, digits = 4)
-      }
+    lam.v.90 <- mapply(eigen_select.fun,lam.v,eigen.num.v.90)
+    bstar1.v.90 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.90)
+    bstar2.v.90 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.90)
+    
+    opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar1.v.90), M=M.ref,
+                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+    h11.hdl.90 = opt$par
+    opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar2.v.90), M=M.ref,
+                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+    h22.hdl.90 = opt$par
+    
+    opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar1.v), M=M.ref,
+                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+    h11.hdl.99 = opt$par
+    opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar2.v), M=M.ref,
+                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+    h22.hdl.99 = opt$par
+    
+    if(abs(h11.hdl.90[1]-h11.hdl.99[1])/abs(h11.hdl.99[1]) < 0.2 && 
+       abs(h22.hdl.90[1]-h22.hdl.99[1])/abs(h22.hdl.99[1]) < 0.2){
+      lam.v.use <- lam.v
+      bstar1.v.use <- bstar1.v
+      bstar2.v.use <- bstar2.v
+      h11 <- h11.hdl.use <- h11.hdl.99
+      h22 <- h22.hdl.use <- h22.hdl.99
+    } else{
+      lam.v.use <- lam.v.90
+      bstar1.v.use <- bstar1.v.90
+      bstar2.v.use <- bstar2.v.90
+      h11 <- h11.hdl.use <- h11.hdl.90
+      h22 <- h22.hdl.use <- h22.hdl.90
+    }
+    opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
+                rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
+                lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
+                bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
+                lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+    h12 <- h12.hdl.use = opt$par
+    rg <- h12.hdl.use[1]/sqrt(h11.hdl.use[1]*h22.hdl.use[1])
+    
+    cat("Continuing computing standard error with jackknife \n")
+    if(output.file != ""){
+      cat("Continuing computing standard error with jackknife \n", file = output.file, append = T)
+    }
+    counter <- 0
+    message <- ""
+    rg.jackknife <- h11.jackknife <- h12.jackknife <- h22.jackknife <- length(lam.v)
+    for(i in 1:length(lam.v)){
+      cat(i, "\n")
+      opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+      h11.hdl.jackknife = opt$par
       
-      if(rg.se < 1e-4){
-        rg.se.out <- formatC(rg.se, format = "e", digits = 2)
-      } else{
-        rg.se.out <- round(rg.se, digits = 4)
-      }
       
+      opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar2.v.use[-i]), M=M.ref,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+      h22.hdl.jackknife = opt$par
+      
+      opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
+                  rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
+                  lam0=unlist(lam.v.use[-i]), lam1=unlist(lam.v.use[-i]), lam2=unlist(lam.v.use[-i]),
+                  bstar1=unlist(bstar1.v.use[-i]), bstar2=unlist(bstar2.v.use[-i]),
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+      h12.hdl.jackknife = opt$par
+      h11.jackknife[i] <- h11.hdl.jackknife[1]
+      h12.jackknife[i] <- h12.hdl.jackknife[1]
+      h22.jackknife[i] <- h22.hdl.jackknife[1]
+      rg.jackknife[i] <- h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1])
+      
+      ## Report progress ##
+      
+      counter <- counter + 1
+      value <- round(counter/length(lam.v)*100)
+      backspaces <- paste(rep("\b", nchar(message)), collapse = "")
+      message <- paste("Progress... ", value, "%", sep = "", 
+                       collapse = "")
+      cat(backspaces, message, sep = "")
+    }
+    rg.jackknife <- rg.jackknife[!is.infinite(rg.jackknife)]
+    h11.se <-  sqrt(mean((h11.jackknife - mean(h11.jackknife))^2)*(length(h11.jackknife) - 1))
+    h12.se <-  sqrt(mean((h12.jackknife - mean(h12.jackknife))^2)*(length(h12.jackknife) - 1))
+    h22.se <-  sqrt(mean((h22.jackknife - mean(h22.jackknife))^2)*(length(h22.jackknife) - 1))
+    rg.se <-  sqrt(mean((rg.jackknife - mean(rg.jackknife))^2)*(length(rg.jackknife) - 1))
+    P <- pchisq((rg/rg.se)^2, df = 1, lower.tail = FALSE)
+    estimates.df <- matrix(c(h11,h22,h12,rg, 
+                             h11.se,h22.se,h12.se,rg.se),
+                           nrow=4,ncol=2)
+    rownames(estimates.df) <- c("Heritability_1", "Heritability_2", "Genetic_Covariance", "Genetic_Correlation")
+    colnames(estimates.df) <- c("Estimate", "se")
+    
+    output <- function(value){
+      if(is.na(value)){
+        value.out <- NA
+      } else if(abs(value) < 1e-4){
+        value.out <- formatC(value, format = "e", digits = 2)
+      } else {
+        value.out <- round(value, digits = 4)
+      }
+    }
+    
+    if(is.na(P)){
+      p.out <- NA
+    } else{
       p.out <- formatC(P, format = "e", digits = 2)
-      
-      end.time <- date()
-      cat("\n")
-      cat("\n")
+    }
+    
+    end.time <- date()
+    cat("\n")
+    cat("\n")
+    cat("Heritability of phenotype 1: ", 
+        output(h11), 
+        paste0("(", output(h11.se), ") \n"))
+    cat("Heritability of phenotype 2: ", 
+        output(h22), 
+        paste0("(", output(h22.se), ") \n"))
+    cat("Genetic Covariance: ", 
+        output(h12), 
+        paste0("(", output(h12.se), ") \n"))
+    cat("Genetic Correlation: ", 
+        output(rg), 
+        paste0("(", output(rg.se), ") \n"))
+    cat("P: ",p.out,"\n")
+    if(h11 == 0 | h22 == 0 ){
+      cat("Warning: Heritability of one trait was estimated to be 0, which may due to:
+          1) The true heritability is very small;
+          2) The sample size is too small;
+          3) Many SNPs in the chosen reference panel misses in the GWAS.")
+    }
+    cat("\n")
+    cat("Analysis finished at",end.time,"\n")
+    
+    if(output.file != ""){
+      cat("\n", file = output.file, append = TRUE)
+      cat("\n", file = output.file, append = TRUE)
+      cat("Heritability of phenotype 1: ", 
+          output(h11), 
+          paste0("(", output(h11.se), ") \n"), file = output.file, append = TRUE)
+      cat("Heritability of phenotype 2: ", 
+          output(h22), 
+          paste0("(", output(h22.se), ") \n"), file = output.file, append = TRUE)
+      cat("Genetic Covariance: ", 
+          output(h12), 
+          paste0("(", output(h12.se), ") \n"), file = output.file, append = TRUE)
       cat("Genetic Correlation: ", 
-          rg.out, 
-          paste0("(", rg.se.out, ")"))
-      cat("\n")
-      cat("P: ",p.out)
-      cat("\n")
-      cat("\n")
-      cat("Analysis finished at",end.time,"\n")
-      
-      if(output.file != ""){
-      cat("\n", file = output.file, append = TRUE)
-      cat("\n", file = output.file, append = TRUE)
-      cat("Genetic Correlation: ", 
-          rg.out, 
-          paste0("(", rg.se.out, ")"), 
-          file = output.file, append = TRUE)
-      cat("\n", file = output.file, append = TRUE)
-      cat("P: ",p.out, file = output.file, append = TRUE)
-      cat("\n", file = output.file, append = TRUE)
+          output(rg), 
+          paste0("(", output(rg.se), ") \n"), file = output.file, append = TRUE)
+      cat("P: ",p.out,"\n", file = output.file, append = TRUE)
+      if(h11 == 0 | h22 == 0 ){
+        cat("Warning: Heritability of one trait was estimated to be 0, which may due to:
+            1) The true heritability is very low;
+            2) The sample size of the GWAS is too small;
+            3) Many SNPs in the chosen reference panel misse in the GWAS.", file = output.file, append = TRUE)
+      }
       cat("\n", file = output.file, append = TRUE)
       cat("Analysis finished at",end.time,"\n", file = output.file, append = TRUE)
       cat("The results were saved to", output.file)
       cat("\n")
       cat("The results were saved to", output.file, file = output.file, append = TRUE)
       cat("\n", file = output.file, append = TRUE)
-    }
+      }
     
-    return(list(rg = rg, rg.se = rg.se, P = P))
-  }
+    return(list(rg = rg, rg.se = rg.se, P = P, estimates.df = estimates.df))
+    }
