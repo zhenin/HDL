@@ -142,14 +142,14 @@ HDL.rg <-
       cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n", file = output.file, append = T)
     }
     if(k1 < length(overlap.snp.MAF.05.list)*0.99){
-      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 1. This may generate bias in estimation. Please make sure that you are using correct reference panel."
+      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 1. This may generate bias in estimation. Please make sure that you are using correct reference panel.  \n"
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
       cat(error.message)
     }
     if(k2 < length(overlap.snp.MAF.05.list)*0.99){
-      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please make sure that you are using correct reference panel."
+      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please make sure that you are using correct reference panel.  \n"
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
@@ -367,7 +367,8 @@ HDL.rg <-
                 lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
                 bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
                 lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
-    h12 <- h12.hdl.use <- opt$par
+    h12.hdl.use <- opt$par
+    h12 <- h12.hdl.use[1]
     rg <- h12.hdl.use[1]/sqrt(h11.hdl.use[1]*h22.hdl.use[1])
     
     cat("Continuing computing standard error with jackknife \n")
