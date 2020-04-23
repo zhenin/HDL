@@ -365,7 +365,7 @@ HDL.rg <-
                 lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
                 bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
                 lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
-    h12 <- h12.hdl.use = opt$par
+    h12 <- h12.hdl.use <- opt$par
     rg <- h12.hdl.use[1]/sqrt(h11.hdl.use[1]*h22.hdl.use[1])
     
     cat("Continuing computing standard error with jackknife \n")
