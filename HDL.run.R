@@ -1,10 +1,10 @@
 args <- commandArgs(trailingOnly = TRUE)
-args.print <- paste("Function arguments:", paste(args, collapse = "\n"), sep = "\n")
-cat(args.print, "\n\n")
 if(length(args) == 0){
   library(HDL)
   q()
 }
+args.print <- paste("Function arguments:", paste(args, collapse = "\n"), sep = "\n")
+cat(args.print, "\n\n")
 gwas1.df.path <- gsub(x = args[grep(x = args, pattern = "gwas1.df=")], pattern = "gwas1.df=", replacement = "")
 gwas2.df.path <- gsub(x = args[grep(x = args, pattern = "gwas2.df=")], pattern = "gwas2.df=", replacement = "")
 LD.path <- gsub(x = args[grep(x = args, pattern = "LD.path=")], pattern = "LD.path=", replacement = "")
