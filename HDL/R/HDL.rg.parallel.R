@@ -1,6 +1,7 @@
-#' High-definition likelihood inference of genetic correlations (HDL)
+#' High-definition likelihood inference of genetic correlations with multiple cores
 #' 
-#' The function returns the estimate and standard error of the genetic correlation between two traits based on GWAS summary statistics. 
+#' This function is a parallel version of HDL.rg. The function returns the estimate and standard error of the genetic correlation between two traits based on GWAS summary statistics. 
+#' Note: The parallelization is implemented by doSNOW pakckage. Please make sure it has been successfully installed.
 #' 
 #' @param gwas1.df A data frame including GWAS summary statistics of genetic variants for trait 1. 
 #' The input data frame should include following columns: SNP, SNP ID; A1, effect allele; A2, reference allele;
@@ -9,6 +10,7 @@
 #' The input data frame should include following columns: SNP, SNP ID; A1, effect allele; A2, reference allele;
 #' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS.
 #' @param LD.path Path to the directory where linkage disequilibrium (LD) information is stored.
+#' @param numCores The number of cores to be used.
 #' @param Nref Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 336000.
 #' @param N0 Number of individuals included in both cohorts. The estimated genetic correlation is usually robust against misspecified N0. 
 #' If not given, the default value is set to the minimum sample size across all SNPs in cohort 1 and cohort 2.
@@ -50,14 +52,18 @@
 #' ## The path to the directory where linkage disequilibrium (LD) information is stored.
 #' LD.path <- "/Users/zhengning/Work/HDL/package/UKB_array_SVD_eigen90_extraction"
 #' 
-#' res.HDL <- HDL.rg(gwas1.example, gwas2.example, LD.path)
+#' res.HDL <- HDL.rg.parallel(gwas1.example, gwas2.example, LD.path, numCores = 2)
 #' res.HDL
 #' }
 #' @export
 #' 
 
-HDL.rg <-
-  function(gwas1.df, gwas2.df, LD.path, Nref = 336000, N0 = min(gwas1.df$N, gwas2.df$N), output.file = ""){
+HDL.rg.parallel <-
+  function(gwas1.df, gwas2.df, LD.path, Nref = 336000, N0 = min(gwas1.df$N, gwas2.df$N), output.file = "", numCores = 2){
+    
+    if(!require("doSNOW",character.only = TRUE)){
+      stop("Pacakge doSNOW was not found. Please install it firstly.")
+    }
     
     if(output.file != ""){
       if(file.exists(output.file) == T){
@@ -169,134 +175,127 @@ HDL.rg <-
     
     rho12 <- suppressWarnings(inner_join(gwas1.df %>% select(SNP, Z), gwas2.df %>% select(SNP, Z), by = "SNP") %>%
                                 summarise(x=cor(Z.x, Z.y, use = "complete.obs")) %>% unlist)
-    
-    bstar1.v <- bstar2.v <- lam.v <- list()
-    HDL11.df <- HDL12.df <- HDL22.df <- names.row <- NULL
-    counter <- 0
-    message <- ""
+    # counter <- 0
+    # message <- ""
     num.pieces <- length(unlist(nsnps.list))
-    for(chr in 1:22){
-      k <- length(nsnps.list[[chr]])
-      for(piece in 1:k){
-        
-        ## reference sample ##
-        
-        if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
-          load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000_500banded_90eigen.rda"))
-          snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.bim"))
-        } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
-          load(file=paste0(LD.path, "/ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
-          snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
-        } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
-          load(file=paste0(LD.path, "/ukb_imputed_hapmap2_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
-          snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_clean.bim"))
-        } 
-        colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
-        snps.ref <- snps.ref.df$id
-        A2.ref <- snps.ref.df$A2
-        names(A2.ref) <- snps.ref
-        
-        gwas1.df.subset <- gwas1.df %>% filter(SNP %in% snps.ref)
-        bhat1.raw <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])
-        A2.gwas1 <- gwas1.df.subset[, "A2"]
-        names(bhat1.raw) <- names(A2.gwas1) <- gwas1.df.subset$SNP
-        idx.sign1 <- A2.gwas1 == A2.ref[names(A2.gwas1)]
-        bhat1.raw <- bhat1.raw*(2*as.numeric(idx.sign1)-1)
-        
-        gwas2.df.subset <- gwas2.df %>% filter(SNP %in% snps.ref)
-        bhat2.raw <- gwas2.df.subset[, "Z"] / sqrt(gwas2.df.subset[, "N"])
-        A2.gwas2 <- gwas2.df.subset[, "A2"]
-        names(bhat2.raw) <- names(A2.gwas2) <- gwas2.df.subset$SNP
-        idx.sign2 <- A2.gwas2 == A2.ref[names(A2.gwas2)]
-        bhat2.raw <- bhat2.raw*(2*as.numeric(idx.sign2)-1)
-        
-        M <- length(LDsc)
-        bhat1 <- bhat2 <- numeric(M)
-        names(bhat1) <- names(bhat2) <- snps.ref
-        bhat1[names(bhat1.raw)] <- bhat1.raw
-        bhat2[names(bhat2.raw)] <- bhat2.raw
-        
-        
-        a11 <- bhat1**2
-        a22 <- bhat2**2
-        a12 <- bhat1*bhat2
-        
-        reg = lm(a11~ LDsc)
-        h11.ols <- c(summary(reg)$coef[1:2,1:2]*c(N1,M))
-        
-        reg = lm(a22~ LDsc)
-        h22.ols <- c(summary(reg)$coef[1:2,1:2]*c(N2,M))
-        
-        reg = lm(a12~ LDsc)
-        if (N0>0) h12.ols = c(summary(reg)$coef[1:2,1:2]*c((N0/p1/p2),M))
-        if (N0==0) h12.ols = c(summary(reg)$coef[1:2,1:2]*c(N,M))
-        
-        ##  ................................ weighted LS: use estimated h2
-        ## vars from Bulik-Sullivan
-        
-        h11v = (h11.ols[2]*LDsc/M + 1/N1)^2
-        h22v = (h22.ols[2]*LDsc/M + 1/N2)^2
-        
-        reg = lm(a11~ LDsc, weight=1/h11v)
-        h11.wls <- c(summary(reg)$coef[1:2,1:2]*c(N1,M))
-        
-        reg = lm(a22~ LDsc, weight=1/h22v)
-        h22.wls <- c(summary(reg)$coef[1:2,1:2]*c(N2,M))
-        
-        if (N0>0) h12v = sqrt(h11v*h22v) + (h12.ols[2]*LDsc/M + p1*p2*rho12/N0)^2
-        if (N0==0) h12v = sqrt(h11v*h22v) + (h12.ols[2]*LDsc/M)^2
-        
-        reg = lm(a12~ LDsc, weight=1/h12v)
-        if (N0>0) h12.wls = c(summary(reg)$coef[1:2,1:2]*c((N0/p1/p2),M))
-        if (N0==0) h12.wls = c(summary(reg)$coef[1:2,1:2]*c(N,M))
-        
-        ## .................................  likelihood based
-        ## ....  estimate h2s
-        bstar1 = crossprod(V,bhat1)  ## 
-        bstar2 = crossprod(V,bhat2)  ##
-        
-        opt = optim(c(h11.wls[2],1), llfun, N=N1, Nref=Nref, lam=lam, bstar=bstar1, M=M,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-        
-        h11.hdl = opt$par
-        
-        opt = optim(c(h22.wls[2],1), llfun, N=N2, Nref=Nref, lam=lam, bstar=bstar2, M=M,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-        h22.hdl = opt$par
-        
-        opt=  optim(c(h12.wls[2],rho12), llfun.gcov.part.2, h11=h11.hdl, h22=h22.hdl, 
-                    rho12=rho12, M=M, N1=N1, N2=N2, N0=N0, Nref=Nref, 
-                    lam0=lam, lam1=lam, lam2=lam, 
-                    bstar1=bstar1, bstar2=bstar2,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
-        h12.hdl = opt$par
-        
-        HDL11.df <- rbind(HDL11.df, h11.hdl)
-        HDL22.df <- rbind(HDL22.df, h22.hdl)
-        HDL12.df <- rbind(HDL12.df, h12.hdl)
-        
-        bstar1.v <- c(bstar1.v, list(bstar1))
-        bstar2.v <- c(bstar2.v, list(bstar2))
-        lam.v <- c(lam.v, list(lam))
-        
-        ## Report progress ##
-        
-        counter <- counter + 1
-        value <- round(counter/num.pieces*100)
-        backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-        message <- paste("Estimation is ongoing ... ", value, "%", sep = "", 
-                         collapse = "")
-        cat(backspaces, message, sep = "")
-        
-      }
+    info.pieces.df <- data.frame(chr = rep.int(1:22, 
+                                               unlist(lapply(nsnps.list, length))),
+                                 piece = unlist(lapply(X = unlist(lapply(nsnps.list, length)), seq.int, from=1)))
+    
+    workers <- rep("localhost", times = numCores)
+    cl <- makeCluster(workers)
+    registerDoSNOW(cl)
+    pb <- txtProgressBar(max = num.pieces, style = 3)
+    progress <- function(n) setTxtProgressBar(pb, n)
+    opts <- list(progress = progress)
+    HDL.res.pieces.list <- foreach (i=1:nrow(info.pieces.df), .options.snow = opts) %dopar% {
+      chr <- info.pieces.df[i,"chr"]
+      piece <- info.pieces.df[i,"piece"]
+      ## reference sample ##
+      
+      if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
+        load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000_500banded_90eigen.rda"))
+        snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.bim"))
+      } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
+        load(file=paste0(LD.path, "/ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
+        snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
+      } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
+        load(file=paste0(LD.path, "/ukb_imputed_hapmap2_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
+        snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_clean.bim"))
+      } 
+      colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
+      snps.ref <- snps.ref.df$id
+      A2.ref <- snps.ref.df$A2
+      names(A2.ref) <- snps.ref
+      
+      gwas1.df.subset <- gwas1.df %>% filter(SNP %in% snps.ref)
+      bhat1.raw <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])
+      A2.gwas1 <- gwas1.df.subset[, "A2"]
+      names(bhat1.raw) <- names(A2.gwas1) <- gwas1.df.subset$SNP
+      idx.sign1 <- A2.gwas1 == A2.ref[names(A2.gwas1)]
+      bhat1.raw <- bhat1.raw*(2*as.numeric(idx.sign1)-1)
+      
+      gwas2.df.subset <- gwas2.df %>% filter(SNP %in% snps.ref)
+      bhat2.raw <- gwas2.df.subset[, "Z"] / sqrt(gwas2.df.subset[, "N"])
+      A2.gwas2 <- gwas2.df.subset[, "A2"]
+      names(bhat2.raw) <- names(A2.gwas2) <- gwas2.df.subset$SNP
+      idx.sign2 <- A2.gwas2 == A2.ref[names(A2.gwas2)]
+      bhat2.raw <- bhat2.raw*(2*as.numeric(idx.sign2)-1)
+      
+      M <- length(LDsc)
+      bhat1 <- bhat2 <- numeric(M)
+      names(bhat1) <- names(bhat2) <- snps.ref
+      bhat1[names(bhat1.raw)] <- bhat1.raw
+      bhat2[names(bhat2.raw)] <- bhat2.raw
+      
+      
+      a11 <- bhat1**2
+      a22 <- bhat2**2
+      a12 <- bhat1*bhat2
+      
+      reg = lm(a11~ LDsc)
+      h11.ols <- c(summary(reg)$coef[1:2,1:2]*c(N1,M))
+      
+      reg = lm(a22~ LDsc)
+      h22.ols <- c(summary(reg)$coef[1:2,1:2]*c(N2,M))
+      
+      reg = lm(a12~ LDsc)
+      if (N0>0) h12.ols = c(summary(reg)$coef[1:2,1:2]*c((N0/p1/p2),M))
+      if (N0==0) h12.ols = c(summary(reg)$coef[1:2,1:2]*c(N,M))
+      
+      ##  ................................ weighted LS: use estimated h2
+      ## vars from Bulik-Sullivan
+      
+      h11v = (h11.ols[2]*LDsc/M + 1/N1)^2
+      h22v = (h22.ols[2]*LDsc/M + 1/N2)^2
+      
+      reg = lm(a11~ LDsc, weight=1/h11v)
+      h11.wls <- c(summary(reg)$coef[1:2,1:2]*c(N1,M))
+      
+      reg = lm(a22~ LDsc, weight=1/h22v)
+      h22.wls <- c(summary(reg)$coef[1:2,1:2]*c(N2,M))
+      
+      if (N0>0) h12v = sqrt(h11v*h22v) + (h12.ols[2]*LDsc/M + p1*p2*rho12/N0)^2
+      if (N0==0) h12v = sqrt(h11v*h22v) + (h12.ols[2]*LDsc/M)^2
+      
+      reg = lm(a12~ LDsc, weight=1/h12v)
+      if (N0>0) h12.wls = c(summary(reg)$coef[1:2,1:2]*c((N0/p1/p2),M))
+      if (N0==0) h12.wls = c(summary(reg)$coef[1:2,1:2]*c(N,M))
+      
+      ## .................................  likelihood based
+      ## ....  estimate h2s
+      bstar1 = crossprod(V,bhat1)  ## 
+      bstar2 = crossprod(V,bhat2)  ##
+      
+      opt = optim(c(h11.wls[2],1), llfun, N=N1, Nref=Nref, lam=lam, bstar=bstar1, M=M,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+      
+      h11.hdl = opt$par
+      
+      opt = optim(c(h22.wls[2],1), llfun, N=N2, Nref=Nref, lam=lam, bstar=bstar2, M=M,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+      h22.hdl = opt$par
+      
+      opt=  optim(c(h12.wls[2],rho12), llfun.gcov.part.2, h11=h11.hdl, h22=h22.hdl, 
+                  rho12=rho12, M=M, N1=N1, N2=N2, N0=N0, Nref=Nref, 
+                  lam0=lam, lam1=lam, lam2=lam, 
+                  bstar1=bstar1, bstar2=bstar2,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+      h12.hdl = opt$par
+      
+      c(list(h11.hdl[1]),list(h22.hdl[1]),list(h12.hdl[1]),list(bstar1),list(bstar2),list(lam))
     }
+    close(pb)
+    
     cat("\n")
-    rownames(HDL11.df) <- rownames(HDL22.df) <- rownames(HDL12.df) <- names.row
     
-    h1_2 <- sum(HDL11.df[,1])
-    h2_2 <- sum(HDL22.df[,1])
-    gen.cov <- sum(HDL12.df[,1])
+    h1_2 <- sum(unlist(lapply(HDL.res.pieces.list, FUN = "[[", 1)))
+    h2_2 <- sum(unlist(lapply(HDL.res.pieces.list, FUN = "[[", 2)))
+    gen.cov <- sum(unlist(lapply(HDL.res.pieces.list, FUN = "[[", 3)))
     
+    bstar1.v <- lapply(HDL.res.pieces.list, FUN = "[[", 4)
+    bstar2.v <- lapply(HDL.res.pieces.list, FUN = "[[", 5)
+    lam.v <- lapply(HDL.res.pieces.list, FUN = "[[", 6)
     
     ##### Estimated likelihood for h12 + h11,h22 independent #####
     
@@ -318,10 +317,10 @@ HDL.rg <-
         eigen.percent[j] <- temp/nsnps.v[i]
       }
       eigen.num.90 <- which(eigen.percent > 0.9)[1]
-      eigen.num.95 <- which(eigen.percent > 0.95)[1]
+      #eigen.num.95 <- which(eigen.percent > 0.95)[1]
       
       eigen.num.v.90 <- c(eigen.num.v.90, eigen.num.90)
-      eigen.num.v.95 <- c(eigen.num.v.95, eigen.num.95)
+      #eigen.num.v.95 <- c(eigen.num.v.95, eigen.num.95)
     }
     
     eigen_select.fun <- function(x,k){
@@ -375,10 +374,11 @@ HDL.rg <-
     if(output.file != ""){
       cat("Continuing computing standard error with jackknife \n", file = output.file, append = T)
     }
-    counter <- 0
-    message <- ""
-    system.time({rg.jackknife <- h11.jackknife <- h12.jackknife <- h22.jackknife <- length(lam.v)
-    for(i in 1:length(lam.v)){
+    
+    pb <- txtProgressBar(max = num.pieces, style = 3)
+    opts <- list(progress = progress)
+    
+    HDL.res.jackknife.list <- foreach (i = 1:length(lam.v), .options.snow = opts) %dopar% {
       opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
                   lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.jackknife = opt$par
@@ -394,20 +394,18 @@ HDL.rg <-
                   bstar1=unlist(bstar1.v.use[-i]), bstar2=unlist(bstar2.v.use[-i]),
                   lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
       h12.hdl.jackknife = opt$par
-      h11.jackknife[i] <- h11.hdl.jackknife[1]
-      h12.jackknife[i] <- h12.hdl.jackknife[1]
-      h22.jackknife[i] <- h22.hdl.jackknife[1]
-      rg.jackknife[i] <- h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1])
+      c(h11.hdl.jackknife[1], h22.hdl.jackknife[1], h12.hdl.jackknife[1],
+        h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1]))
       
-      ## Report progress ##
-      
-      counter <- counter + 1
-      value <- round(counter/length(lam.v)*100)
-      backspaces <- paste(rep("\b", nchar(message)), collapse = "")
-      message <- paste("Progress... ", value, "%", sep = "", 
-                       collapse = "")
-      cat(backspaces, message, sep = "")
-    }})
+    }
+    close(pb)
+    stopCluster(cl) 
+    
+    h11.jackknife <- unlist(lapply(HDL.res.jackknife.list, FUN = "[[", 1))
+    h22.jackknife <- unlist(lapply(HDL.res.jackknife.list, FUN = "[[", 2))
+    h12.jackknife <- unlist(lapply(HDL.res.jackknife.list, FUN = "[[", 3))
+    rg.jackknife <- unlist(lapply(HDL.res.jackknife.list, FUN = "[[", 4))
+    
     rg.jackknife <- rg.jackknife[!is.infinite(rg.jackknife)]
     h11.se <-  sqrt(mean((h11.jackknife - mean(h11.jackknife))^2)*(length(h11.jackknife) - 1))
     h12.se <-  sqrt(mean((h12.jackknife - mean(h12.jackknife))^2)*(length(h12.jackknife) - 1))
@@ -489,7 +487,7 @@ HDL.rg <-
       cat("\n")
       cat("The results were saved to", output.file, file = output.file, append = TRUE)
       cat("\n", file = output.file, append = TRUE)
-      }
+    }
     
     return(list(rg = rg, rg.se = rg.se, P = P, estimates.df = estimates.df))
-    }
+  }

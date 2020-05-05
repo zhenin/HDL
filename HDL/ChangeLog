@@ -1,3 +1,7 @@
+2020-05-05 15:00  zheng
+    * Updated to version 1.3.0
+    * Parallel algorithm has been added. (HDL.rg.parallel and HDL.parallel.run.R)
+
 2020-04-23 07:30  zheng
     * Updated to version 1.2.1
     * Replaced the full-likelihood function (which generate convergence problems in jackknife) by eigen methods to avoid 0 estimate of h2.

@@ -1,5 +1,15 @@
+if(!require("doSNOW",character.only = TRUE)){
+  cat("Pacakge doSNOW has not been installed. Start installing... \n")
+  try_error <- try(install.packages("doSNOW",dependencies=TRUE, lib = Sys.getenv("R_LIBS_USER")), silent = TRUE)
+  if(!is.null(try_error)){
+    try_error <- try(install.packages("doSNOW", 
+                                      dependencies=TRUE), silent = TRUE)
+  }
+}
+
 args <- commandArgs(trailingOnly = TRUE)
 args.print <- paste("Function arguments:", paste(args, collapse = "\n"), sep = "\n")
+cat("\n")
 cat(args.print, "\n\n")
 if(length(args) == 0){
   library(HDL)
@@ -11,6 +21,7 @@ LD.path <- gsub(x = args[grep(x = args, pattern = "LD.path=")], pattern = "LD.pa
 Nref <- gsub(x = args[grep(x = args, pattern = "Nref=")], pattern = "Nref=", replacement = "")
 N0 <- gsub(x = args[grep(x = args, pattern = "N0=")], pattern = "N0=", replacement = "")
 output.file <- gsub(x = args[grep(x = args, pattern = "output.file=")], pattern = "output.file=", replacement = "")
+numCores <- gsub(x = args[grep(x = args, pattern = "numCores=")], pattern = "numCores=", replacement = "")
 
 if(length(output.file) == 0){
   length(output.file) <- ""
@@ -62,7 +73,7 @@ if(length(N0) == 0)
 ##### Run HDL #####
 
 library(HDL)
-res.HDL <- HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file)
+res.HDL <- HDL.rg.parallel(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file, numCores = numCores)
 
 if(output.file != ""){
   fConn <- file(output.file)
