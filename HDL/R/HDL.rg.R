@@ -188,7 +188,7 @@ HDL.rg <-
           load(file=paste0(LD.path, "/ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
           snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
         } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
-          load(file=paste0(LD.path, "/ukb_imputed_hapmap2_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
+          load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_500banded.rda"))
           snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_clean.bim"))
         } 
         colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
