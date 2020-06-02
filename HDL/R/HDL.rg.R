@@ -109,6 +109,8 @@ HDL.rg <-
       }
     }
     
+    LD.files <- list.files(LD.path)
+    
     if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
       load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
       load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
@@ -120,6 +122,13 @@ HDL.rg <-
     } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
       load(file=paste0(LD.path, "/UKB_snp_counter_imputed.hapmap2.RData"))
       load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
+      overlap.snp.MAF.05.list <- snps.list.imputed.vector
+      nsnps.list <- nsnps.list.imputed
+    } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
+      snp_counter_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_counter.*")]
+      snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
+      load(file=paste(LD.path, snp_counter_file, sep = "/"))
+      load(file=paste(LD.path, snp_list_file, sep = "/"))
       overlap.snp.MAF.05.list <- snps.list.imputed.vector
       nsnps.list <- nsnps.list.imputed
     } else{

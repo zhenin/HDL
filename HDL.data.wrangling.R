@@ -45,6 +45,8 @@ if(length(log.file) != 0){
   cat("Data are loaded successfully. Data wrangling starts. \n", file = log.file, append = T)
 }
 
+LD.files <- list.files(LD.path)
+
 ## the Neale's UKB GWAS format ##
 if(length(GWAS.type) != 0){
   if(GWAS.type == "UKB.Neale"){
@@ -58,6 +60,11 @@ if(length(GWAS.type) != 0){
     } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
       load(paste0(LD.path, "/snp.dictionary.imputed.rda"))
       load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
+      overlap.snp.MAF.05.list <- snps.list.imputed.vector
+    } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
+      load(paste0(LD.path, "/snp.dictionary.imputed.rda"))
+      snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
+      load(file=paste(LD.path, snp_list_file, sep = "/"))
       overlap.snp.MAF.05.list <- snps.list.imputed.vector
     } else{
       error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
@@ -89,6 +96,10 @@ if(length(GWAS.type) == 0){
     overlap.snp.MAF.05.list <- snps.list.imputed.vector
   } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
     load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
+    overlap.snp.MAF.05.list <- snps.list.imputed.vector
+  } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
+    snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
+    load(file=paste(LD.path, snp_list_file, sep = "/"))
     overlap.snp.MAF.05.list <- snps.list.imputed.vector
   } else{
     error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
