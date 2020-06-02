@@ -202,10 +202,8 @@ HDL.rg <-
         } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
           LD_rda_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*rda"))]
           LD_bim_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*bim"))]
-          load(file=paste(LD.path, snp_counter_file, sep = "/"))
-          load(file=paste(LD.path, snp_list_file, sep = "/"))
-          overlap.snp.MAF.05.list <- snps.list.imputed.vector
-          nsnps.list <- nsnps.list.imputed
+          load(file=paste(LD.path, LD_rda_file, sep = "/"))
+          snps.ref.df <- read.table(paste(LD.path, LD_bim_file, sep = "/"))
         } 
         colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
         snps.ref <- snps.ref.df$id
