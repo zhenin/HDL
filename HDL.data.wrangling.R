@@ -36,6 +36,7 @@ if(length(log.file) != 0){
 
 if(summary(file(fn))$class == "gzfile"){
   gwas.all <- read.table(gzfile(fn), header = T)
+  close(gzfile(fn))
 } else{
   gwas.all <- read.table(fn, header = T)
 }

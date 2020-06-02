@@ -199,6 +199,13 @@ HDL.rg <-
         } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
           load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_500banded.rda"))
           snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_clean.bim"))
+        } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
+          LD_rda_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*rda"))]
+          LD_bim_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*bim"))]
+          load(file=paste(LD.path, snp_counter_file, sep = "/"))
+          load(file=paste(LD.path, snp_list_file, sep = "/"))
+          overlap.snp.MAF.05.list <- snps.list.imputed.vector
+          nsnps.list <- nsnps.list.imputed
         } 
         colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
         snps.ref <- snps.ref.df$id
