@@ -321,37 +321,39 @@ HDL.rg <-
       cat("Integrating piecewise results \n", file = output.file, append = T)
     }
     M.ref <- sum(unlist(nsnps.list))
-    # eigen.num.v.90 <- eigen.num.v.95 <- c()
-    # nsnps.v <- unlist(nsnps.list)
-    # for(i in 1:length(nsnps.v)){
-    #   lam.i <- lam.v[[i]]
-    #   eigen.percent <- numeric(length(lam.i))
-    #   temp <- 0
-    #   for(j in 1:length(lam.i)){
-    #     temp <- temp + lam.i[j]
-    #     eigen.percent[j] <- temp/nsnps.v[i]
-    #   }
-    #   eigen.num.90 <- which(eigen.percent > 0.9)[1]
-    #   eigen.num.95 <- which(eigen.percent > 0.95)[1]
-    # 
-    #   eigen.num.v.90 <- c(eigen.num.v.90, eigen.num.90)
-    #   eigen.num.v.95 <- c(eigen.num.v.95, eigen.num.95)
-    # }
-    # 
-    # eigen_select.fun <- function(x,k){
-    #   return(x[1:k])
-    # }
-    # 
-    # lam.v.90 <- mapply(eigen_select.fun,lam.v,eigen.num.v.90)
-    # bstar1.v.90 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.90)
-    # bstar2.v.90 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.90)
-    # 
-    # opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar1.v.90), M=M.ref,
-    #             lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-    # h11.hdl.90 = opt$par
-    # opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar2.v.90), M=M.ref,
-    #             lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-    # h22.hdl.90 = opt$par
+    eigen.num.v.90 <- eigen.num.v.95 <- c()
+    nsnps.v <- unlist(nsnps.list)
+    for(i in 1:length(nsnps.v)){
+      lam.i <- lam.v[[i]]
+      eigen.percent <- numeric(length(lam.i))
+      temp <- 0
+      for(j in 1:length(lam.i)){
+        temp <- temp + lam.i[j]
+        eigen.percent[j] <- temp/nsnps.v[i]
+      }
+      eigen.num.90 <- which(eigen.percent > 0.9)[1]
+      eigen.num.95 <- which(eigen.percent > 0.95)[1]
+
+      eigen.num.v.90 <- c(eigen.num.v.90, eigen.num.90)
+      eigen.num.v.95 <- c(eigen.num.v.95, eigen.num.95)
+    }
+
+    eigen_select.fun <- function(x,k){
+      return(x[1:k])
+    }
+
+    lam.v.90 <- mapply(eigen_select.fun,lam.v,eigen.num.v.90)
+    bstar1.v.90 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.90)
+    bstar2.v.90 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.90)
+
+    opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar1.v.90), M=M.ref,
+                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+    h11.hdl.90 = opt$par
+    opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar2.v.90), M=M.ref,
+                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+    h22.hdl.90 = opt$par
+    
+    
 
     opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar1.v), M=M.ref,
                 lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
@@ -360,20 +362,20 @@ HDL.rg <-
                 lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
     h22.hdl.99 = opt$par
 
-    # if((h11.hdl.90[1]-h11.hdl.99[1])/abs(h11.hdl.99[1]) < 0.2 &&
-    #    (h22.hdl.90[1]-h22.hdl.99[1])/abs(h22.hdl.99[1]) < 0.2){
+    if((h11.hdl.90[1]-h11.hdl.99[1])/abs(h11.hdl.99[1]) < 0.2 &&
+       (h22.hdl.90[1]-h22.hdl.99[1])/abs(h22.hdl.99[1]) < 0.2){
       lam.v.use <- lam.v
       bstar1.v.use <- bstar1.v
       bstar2.v.use <- bstar2.v
       h11.hdl.use <- h11.hdl.99
       h22.hdl.use <- h22.hdl.99
-    # } else{
-    #   lam.v.use <- lam.v.90
-    #   bstar1.v.use <- bstar1.v.90
-    #   bstar2.v.use <- bstar2.v.90
-    #   h11.hdl.use <- h11.hdl.90
-    #   h22.hdl.use <- h22.hdl.90
-    # }
+    } else{
+      lam.v.use <- lam.v.90
+      bstar1.v.use <- bstar1.v.90
+      bstar2.v.use <- bstar2.v.90
+      h11.hdl.use <- h11.hdl.90
+      h22.hdl.use <- h22.hdl.90
+    }
     h11 <- h11.hdl.use[1]
     h22 <- h22.hdl.use[1]
     opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
