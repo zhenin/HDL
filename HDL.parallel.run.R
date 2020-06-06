@@ -22,6 +22,8 @@ Nref <- gsub(x = args[grep(x = args, pattern = "Nref=")], pattern = "Nref=", rep
 N0 <- gsub(x = args[grep(x = args, pattern = "N0=")], pattern = "N0=", replacement = "")
 output.file <- gsub(x = args[grep(x = args, pattern = "output.file=")], pattern = "output.file=", replacement = "")
 numCores <- gsub(x = args[grep(x = args, pattern = "numCores=")], pattern = "numCores=", replacement = "")
+eigen.cut <- gsub(x = args[grep(x = args, pattern = "eigen.cut=")], pattern = "eigen.cut=", replacement = "")
+
 
 if(length(output.file) == 0){
   length(output.file) <- ""
@@ -65,15 +67,17 @@ cat(message)
 gwas2.df <- smart.reader(gwas2.df.path)
 
 if(length(Nref)==0)
-  Nref <- 336000
+  Nref <- 335265
 if(length(N0) == 0)
   N0 <- min(gwas1.df$N, gwas2.df$N)
+if(length(eigen.cut)==0)
+  eigen.cut <- "automatic"
 
 
 ##### Run HDL #####
 
 library(HDL)
-res.HDL <- HDL.rg.parallel(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file, numCores = numCores)
+res.HDL <- HDL.rg.parallel(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file, numCores = numCores, eigen.cut = eigen.cut)
 
 if(output.file != ""){
   fConn <- file(output.file)

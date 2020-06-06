@@ -9,13 +9,15 @@
 #' The input data frame should include following columns: SNP, SNP ID; A1, effect allele; A2, reference allele;
 #' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS.
 #' @param LD.path Path to the directory where linkage disequilibrium (LD) information is stored.
-#' @param Nref Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 336000.
+#' @param Nref Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 335265
 #' @param N0 Number of individuals included in both cohorts. The estimated genetic correlation is usually robust against misspecified N0. 
 #' If not given, the default value is set to the minimum sample size across all SNPs in cohort 1 and cohort 2.
 #' @param output.file Where the log and results should be written. If you do not specify a file, the log will be printed on the console.
-#' 
-#' @note Users can download the eigenvalues and eigenvectors of LD correlation matrices from https://www.dropbox.com/sh/ai2o21gxklhlvs3/AABPD7nKv3nXcvmoQQ3cGh9Qa?dl=0. 
-#' These are the LD matrices and their eigen-decomposition from 336,000 genomic British UK Biobank individuals. Two sets of reference panel are provided: 
+#' @param eigen.cut Which eigenvalues and eigenvectors in each LD score matrix should be used for HDL. 
+#' Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For example, eigen.cut = 0.99 means using the leading eigenvalues explaining 99% of the variance
+#' and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used. 
+#' @note Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://github.com/zhenin/HDL/wiki/Reference-panels
+#' These are the LD matrices and their eigen-decomposition from 335,265 genomic British UK Biobank individuals. Two sets of reference panel are provided: 
 #' 1) 307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping.
 #' 2) 1,029,876 QCed UK Biobank imputed SNPs. The size is about 31 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. 
 #' Therefore if the GWAS includes most of the HapMap3 SNPs, then we recommend using the imputed reference panel.
@@ -27,6 +29,7 @@
 #' \item{rg.se }{The standard error of the estimated genetic correlation.}
 #' \item{P }{P-value based on Wald test.}
 #' \item{estimates.df }{A detailed matrix includes the estimates and standard errors of heritabilities, genetic covariance and genetic correlation.}
+#' \item{eigen.use }{The eigen.cut used in computation.}
 #' }
 #' 
 #' @author Zheng Ning
@@ -57,7 +60,7 @@
 #' 
 
 HDL.rg <-
-  function(gwas1.df, gwas2.df, LD.path, Nref = 336000, N0 = min(gwas1.df$N, gwas2.df$N), output.file = ""){
+  function(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N, gwas2.df$N), output.file = "", eigen.cut = "automatic"){
     
     if(output.file != ""){
       if(file.exists(output.file) == T){
@@ -82,6 +85,38 @@ HDL.rg <-
     if(output.file != ""){
       cat("Analysis starts on",time.start,"\n", file = output.file, append = T)
     }
+    
+    if(eigen.cut != "automatic" && is.na(as.numeric(eigen.cut))){
+      error.message <- "The input of eigen.cut has to be 'automatic' or a number between 0 and 1. \n"
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
+    }
+    
+    LD.files <- list.files(LD.path)
+    
+    if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
+      load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
+      load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
+    } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
+      snp_counter_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_counter.*")]
+      snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
+      load(file=paste(LD.path, snp_counter_file, sep = "/"))
+      load(file=paste(LD.path, snp_list_file, sep = "/"))
+      overlap.snp.MAF.05.list <- snps.list.imputed.vector
+      nsnps.list <- nsnps.list.imputed
+    } else{
+      error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
+    }
+    
+    gwas1.df <- gwas1.df %>% filter(SNP %in% overlap.snp.MAF.05.list)
+    gwas2.df <- gwas2.df %>% filter(SNP %in% overlap.snp.MAF.05.list)
+    
     
     if(!("Z" %in% colnames(gwas1.df))){
       if(("b" %in% colnames(gwas1.df)) && ("se" %in% colnames(gwas1.df))){
@@ -109,38 +144,9 @@ HDL.rg <-
       }
     }
     
-    LD.files <- list.files(LD.path)
     
-    if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
-      load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
-      load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
-    } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
-      load(file=paste0(LD.path, "/UKB_snp_counter_imputed.RData"))
-      load(file=paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))
-      overlap.snp.MAF.05.list <- snps.list.imputed.vector
-      nsnps.list <- nsnps.list.imputed
-    } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
-      load(file=paste0(LD.path, "/UKB_snp_counter_imputed.hapmap2.RData"))
-      load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
-      overlap.snp.MAF.05.list <- snps.list.imputed.vector
-      nsnps.list <- nsnps.list.imputed
-    } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
-      snp_counter_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_counter.*")]
-      snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
-      load(file=paste(LD.path, snp_counter_file, sep = "/"))
-      load(file=paste(LD.path, snp_list_file, sep = "/"))
-      overlap.snp.MAF.05.list <- snps.list.imputed.vector
-      nsnps.list <- nsnps.list.imputed
-    } else{
-      error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
-      if(output.file != ""){
-        cat(error.message, file = output.file, append = T)
-      }
-      stop(error.message)
-    }
-    
-    k1 <- sum(gwas1.df$SNP %in% overlap.snp.MAF.05.list)
-    k2 <- sum(gwas2.df$SNP %in% overlap.snp.MAF.05.list)
+    k1 <- nrow(gwas1.df)
+    k2 <- nrow(gwas2.df)
     k1.percent <- paste("(",round(100*k1 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
     k2.percent <- paste("(",round(100*k2 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
     
@@ -193,12 +199,6 @@ HDL.rg <-
         if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
           load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000_500banded_90eigen.rda"))
           snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.bim"))
-        } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
-          load(file=paste0(LD.path, "/ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
-          snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
-        } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
-          load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_500banded.rda"))
-          snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_clean.bim"))
         } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
           LD_rda_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*rda"))]
           LD_bim_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*bim"))]
@@ -321,61 +321,163 @@ HDL.rg <-
       cat("Integrating piecewise results \n", file = output.file, append = T)
     }
     M.ref <- sum(unlist(nsnps.list))
-    eigen.num.v.90 <- eigen.num.v.95 <- c()
-    nsnps.v <- unlist(nsnps.list)
-    for(i in 1:length(nsnps.v)){
-      lam.i <- lam.v[[i]]
-      eigen.percent <- numeric(length(lam.i))
-      temp <- 0
-      for(j in 1:length(lam.i)){
-        temp <- temp + lam.i[j]
-        eigen.percent[j] <- temp/nsnps.v[i]
-      }
-      eigen.num.90 <- which(eigen.percent > 0.9)[1]
-      eigen.num.95 <- which(eigen.percent > 0.95)[1]
-
-      eigen.num.v.90 <- c(eigen.num.v.90, eigen.num.90)
-      eigen.num.v.95 <- c(eigen.num.v.95, eigen.num.95)
-    }
-
     eigen_select.fun <- function(x,k){
       return(x[1:k])
     }
-
-    lam.v.90 <- mapply(eigen_select.fun,lam.v,eigen.num.v.90)
-    bstar1.v.90 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.90)
-    bstar2.v.90 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.90)
-
-    opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar1.v.90), M=M.ref,
-                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-    h11.hdl.90 = opt$par
-    opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar2.v.90), M=M.ref,
-                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-    h22.hdl.90 = opt$par
     
-    
-
-    opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar1.v), M=M.ref,
-                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-    h11.hdl.99 = opt$par
-    opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v), bstar=unlist(bstar2.v), M=M.ref,
-                lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
-    h22.hdl.99 = opt$par
-
-    if((h11.hdl.90[1]-h11.hdl.99[1])/abs(h11.hdl.99[1]) < 0.2 &&
-       (h22.hdl.90[1]-h22.hdl.99[1])/abs(h22.hdl.99[1]) < 0.2){
-      lam.v.use <- lam.v
-      bstar1.v.use <- bstar1.v
-      bstar2.v.use <- bstar2.v
-      h11.hdl.use <- h11.hdl.99
-      h22.hdl.use <- h22.hdl.99
-    } else{
-      lam.v.use <- lam.v.90
-      bstar1.v.use <- bstar1.v.90
-      bstar2.v.use <- bstar2.v.90
-      h11.hdl.use <- h11.hdl.90
-      h22.hdl.use <- h22.hdl.90
+    eigen_select_num.fun <- function(eigen.percent, cut.percent){
+      if(!(eigen.percent[length(eigen.percent)] > cut.percent)){
+        return(length(eigen.percent))
+      } else{
+        return(which(eigen.percent > cut.percent)[1])
+      }
     }
+    
+    
+    
+    if(eigen.cut == "automatic"){
+      eigen.num.v.90 <- eigen.num.v.95 <- eigen.num.v.99 <- c()
+      nsnps.v <- unlist(nsnps.list)
+      for(i in 1:length(nsnps.v)){
+        lam.i <- lam.v[[i]]
+        eigen.percent <- numeric(length(lam.i))
+        temp <- 0
+        for(j in 1:length(lam.i)){
+          temp <- temp + lam.i[j]
+          eigen.percent[j] <- temp/nsnps.v[i]
+        }
+        eigen.num.90 <- eigen_select_num.fun(eigen.percent, 0.9)
+        eigen.num.95 <- eigen_select_num.fun(eigen.percent, 0.95)
+        eigen.num.99 <- eigen_select_num.fun(eigen.percent, 0.99)
+        
+        eigen.num.v.90 <- c(eigen.num.v.90, eigen.num.90)
+        eigen.num.v.95 <- c(eigen.num.v.95, eigen.num.95)
+        eigen.num.v.99 <- c(eigen.num.v.99, eigen.num.99)
+      }
+      
+      lam.v.90 <- mapply(eigen_select.fun,lam.v,eigen.num.v.90)
+      bstar1.v.90 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.90)
+      bstar2.v.90 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.90)
+      
+      opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar1.v.90), M=M.ref,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+      h11.hdl.90 = opt$par
+      opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar2.v.90), M=M.ref,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+      h22.hdl.90 = opt$par
+      
+      if(sum(unlist(eigen.num.v.90)) == sum(unlist(eigen.num.v.95))){
+        lam.v.use <- lam.v.90
+        bstar1.v.use <- bstar1.v.90
+        bstar2.v.use <- bstar2.v.90
+        h11.hdl.use <- h11.hdl.90
+        h22.hdl.use <- h22.hdl.90
+        eigen.use <- 0.9
+      } else{
+        lam.v.95 <- mapply(eigen_select.fun,lam.v,eigen.num.v.95)
+        bstar1.v.95 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.95)
+        bstar2.v.95 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.95)
+        
+        opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.95), bstar=unlist(bstar1.v.95), M=M.ref,
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+        h11.hdl.95 = opt$par
+        opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.95), bstar=unlist(bstar2.v.95), M=M.ref,
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+        h22.hdl.95 = opt$par
+        
+        if(sum(unlist(eigen.num.v.95)) == sum(unlist(eigen.num.v.99))){
+          if((h11.hdl.90[1]-h11.hdl.95[1])/abs(h11.hdl.95[1]) < 0.2 &&
+             (h22.hdl.90[1]-h22.hdl.95[1])/abs(h22.hdl.95[1]) < 0.2){
+            lam.v.use <- lam.v.95
+            bstar1.v.use <- bstar1.v.95
+            bstar2.v.use <- bstar2.v.95
+            h11.hdl.use <- h11.hdl.95
+            h22.hdl.use <- h22.hdl.95
+            eigen.use <- 0.95
+          } else{
+            lam.v.use <- lam.v.90
+            bstar1.v.use <- bstar1.v.90
+            bstar2.v.use <- bstar2.v.90
+            h11.hdl.use <- h11.hdl.90
+            h22.hdl.use <- h22.hdl.90
+            eigen.use <- 0.9
+          }
+        } else{
+          lam.v.99 <- mapply(eigen_select.fun,lam.v,eigen.num.v.99)
+          bstar1.v.99 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.99)
+          bstar2.v.99 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.99)
+          
+          opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.99), bstar=unlist(bstar1.v.99), M=M.ref,
+                      lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+          h11.hdl.99 = opt$par
+          opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.99), bstar=unlist(bstar2.v.99), M=M.ref,
+                      lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+          h22.hdl.99 = opt$par
+          
+          if((h11.hdl.90[1]-h11.hdl.99[1])/abs(h11.hdl.99[1]) < 0.2 &&
+             (h22.hdl.90[1]-h22.hdl.99[1])/abs(h22.hdl.99[1]) < 0.2){
+            lam.v.use <- lam.v.99
+            bstar1.v.use <- bstar1.v.99
+            bstar2.v.use <- bstar2.v.99
+            h11.hdl.use <- h11.hdl.99
+            h22.hdl.use <- h22.hdl.99
+            eigen.use <- 0.99
+          } else{
+            if((h11.hdl.90[1]-h11.hdl.95[1])/abs(h11.hdl.95[1]) < 0.2 &&
+               (h22.hdl.90[1]-h22.hdl.95[1])/abs(h22.hdl.95[1]) < 0.2){
+              lam.v.use <- lam.v.95
+              bstar1.v.use <- bstar1.v.95
+              bstar2.v.use <- bstar2.v.95
+              h11.hdl.use <- h11.hdl.95
+              h22.hdl.use <- h22.hdl.95
+              eigen.use <- 0.95
+            } else{
+              lam.v.use <- lam.v.90
+              bstar1.v.use <- bstar1.v.90
+              bstar2.v.use <- bstar2.v.90
+              h11.hdl.use <- h11.hdl.90
+              h22.hdl.use <- h22.hdl.90
+              eigen.use <- 0.9
+            }
+          }
+        }
+      }
+    } else if(!is.na(as.numeric(eigen.cut))){
+      eigen.cut <- as.numeric(eigen.cut)
+      eigen.use <- eigen.cut
+      eigen.num.v.cut <- c()
+      nsnps.v <- unlist(nsnps.list)
+      for(i in 1:length(nsnps.v)){
+        lam.i <- lam.v[[i]]
+        eigen.percent <- numeric(length(lam.i))
+        temp <- 0
+        for(j in 1:length(lam.i)){
+          temp <- temp + lam.i[j]
+          eigen.percent[j] <- temp/nsnps.v[i]
+        }
+        eigen.num.cut <- eigen_select_num.fun(eigen.percent, eigen.cut)
+        eigen.num.v.cut <- c(eigen.num.v.cut, eigen.num.cut)
+      }
+      
+      lam.v.cut <- mapply(eigen_select.fun,lam.v,eigen.num.v.cut)
+      bstar1.v.cut <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.cut)
+      bstar2.v.cut <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.cut)
+      
+      opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.cut), bstar=unlist(bstar1.v.cut), M=M.ref,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+      h11.hdl.cut = opt$par
+      opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.cut), bstar=unlist(bstar2.v.cut), M=M.ref,
+                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+      h22.hdl.cut = opt$par
+      
+      lam.v.use <- lam.v.cut
+      bstar1.v.use <- bstar1.v.cut
+      bstar2.v.use <- bstar2.v.cut
+      
+      h11.hdl.use <- h11.hdl.cut
+      h22.hdl.use <- h22.hdl.cut
+    } 
+    
     h11 <- h11.hdl.use[1]
     h22 <- h22.hdl.use[1]
     opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
@@ -507,5 +609,5 @@ HDL.rg <-
       cat("\n", file = output.file, append = TRUE)
       }
     
-    return(list(rg = rg, rg.se = rg.se, P = P, estimates.df = estimates.df))
+    return(list(rg = rg, rg.se = rg.se, P = P, estimates.df = estimates.df, eigen.use = eigen.use))
     }

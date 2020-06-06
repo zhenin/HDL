@@ -4,8 +4,8 @@
 \alias{HDL.rg}
 \title{High-definition likelihood inference of genetic correlations (HDL)}
 \usage{
-HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = 336000, N0 = min(gwas1.df$N,
-  gwas2.df$N), output.file = "")
+HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N,
+  gwas2.df$N), output.file = "", eigen.cut = "automatic")
 }
 \arguments{
 \item{gwas1.df}{A data frame including GWAS summary statistics of genetic variants for trait 1. 
@@ -18,12 +18,16 @@ N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b
 
 \item{LD.path}{Path to the directory where linkage disequilibrium (LD) information is stored.}
 
-\item{Nref}{Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 336000.}
+\item{Nref}{Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 335265}
 
 \item{N0}{Number of individuals included in both cohorts. The estimated genetic correlation is usually robust against misspecified N0. 
 If not given, the default value is set to the minimum sample size across all SNPs in cohort 1 and cohort 2.}
 
 \item{output.file}{Where the log and results should be written. If you do not specify a file, the log will be printed on the console.}
+
+\item{eigen.cut}{Which eigenvalues and eigenvectors in each LD score matrix should be used for HDL. 
+Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For example, eigen.cut = 0.99 means using the leading eigenvalues explaining 99% of the variance
+and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used.}
 }
 \value{
 A list is returned with:
@@ -32,20 +36,18 @@ A list is returned with:
 \item{rg.se }{The standard error of the estimated genetic correlation.}
 \item{P }{P-value based on Wald test.}
 \item{estimates.df }{A detailed matrix includes the estimates and standard errors of heritabilities, genetic covariance and genetic correlation.}
+\item{eigen.use }{The eigen.cut used in computation.}
 }
 }
 \description{
 The function returns the estimate and standard error of the genetic correlation between two traits based on GWAS summary statistics.
 }
 \note{
-Users can download the eigenvalues and eigenvectors of LD correlation matrices from https://www.dropbox.com/sh/ai2o21gxklhlvs3/AABPD7nKv3nXcvmoQQ3cGh9Qa?dl=0. 
-These are the LD matrices and their eigen-decomposition from 336,000 genomic British UK Biobank individuals. Two sets of reference panel are provided: 
-
+Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://github.com/zhenin/HDL/wiki/Reference-panels
+These are the LD matrices and their eigen-decomposition from 335,265 genomic British UK Biobank individuals. Two sets of reference panel are provided: 
 1) 307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping.
-
-2) 1,029,876 QCed UK Biobank imputed SNPs. The size is about 31 GB after unzipping. 
-
-Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. Therefore if the GWAS includes most of the HapMap3 SNPs, then we recommend using the imputed reference panel.
+2) 1,029,876 QCed UK Biobank imputed SNPs. The size is about 31 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. 
+Therefore if the GWAS includes most of the HapMap3 SNPs, then we recommend using the imputed reference panel.
 }
 \examples{
 \dontrun{

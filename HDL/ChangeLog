@@ -1,6 +1,11 @@
+2020-06-06 23:00  zheng
+    * Updated to version 1.3.2
+    * eigen.cut is added as an argument to allow user specify it. 
+    * Features added to automatically select the eigen.cut which gives the most stable heritability estimates.
+
 2020-06-02 11:00  zheng
     * Updated to version 1.3.1
-    * Features added for supporting self-computed reference panel
+    * Features added for supporting self-computed reference panel.
 
 2020-05-05 15:00  zheng
     * Updated to version 1.3.0
