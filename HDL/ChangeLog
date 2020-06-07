@@ -1,3 +1,8 @@
+2020-06-07 20:00  zheng
+    * Updated to version 1.3.3
+    * Point estimates are used as initial values in jackknife.
+    * Point estimates are also printed before s.e. estimation.
+
 2020-06-06 23:00  zheng
     * Updated to version 1.3.2
     * eigen.cut is added as an argument to allow user specify it. 

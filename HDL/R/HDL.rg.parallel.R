@@ -34,7 +34,7 @@
 #' \item{eigen.use }{The eigen.cut used in computation.}
 #' }
 #' 
-#' @author Zheng Ning
+#' @author Zheng Ning, Xia Shen
 #' 
 #' @references 
 #' Ning Z, Pawitan Y, Shen X (2020). High-definition likelihood inference of genetic correlations 
@@ -488,6 +488,40 @@ HDL.rg.parallel <-
     h12 <- h12.hdl.use[1]
     rg <- h12.hdl.use[1]/sqrt(h11.hdl.use[1]*h22.hdl.use[1])
     
+    output <- function(value){
+      if(is.na(value)){
+        value.out <- NA
+      } else if(abs(value) < 1e-4){
+        value.out <- formatC(value, format = "e", digits = 2)
+      } else {
+        value.out <- round(value, digits = 4)
+      }
+    }
+    
+    cat("\n")
+    cat("Point estimates: \n")
+    cat("Heritability of phenotype 1: ", 
+        output(h11), 
+        "\n")
+    cat("Heritability of phenotype 2: ", 
+        output(h22), 
+        "\n")
+    cat("Genetic Covariance: ", 
+        output(h12), 
+        "\n")
+    cat("Genetic Correlation: ", 
+        output(rg), 
+        "\n")
+    if(h11 == 0 | h22 == 0 ){
+      cat("Warning: Heritability of one trait was estimated to be 0, which may due to:
+          1) The true heritability is very small;
+          2) The sample size is too small;
+          3) Many SNPs in the chosen reference panel misses in the GWAS;
+          4) There is severe mismatch between the GWAS sample and the sample for computing reference panel")
+    }
+    cat("\n")
+    
+    
     cat("Continuing computing standard error with jackknife \n")
     if(output.file != ""){
       cat("Continuing computing standard error with jackknife \n", file = output.file, append = T)
@@ -497,16 +531,16 @@ HDL.rg.parallel <-
     opts <- list(progress = progress)
     
     HDL.res.jackknife.list <- foreach (i = 1:length(lam.v), .options.snow = opts) %dopar% {
-      opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
+      opt = optim(h11.hdl.use, llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
                   lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.jackknife = opt$par
       
       
-      opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar2.v.use[-i]), M=M.ref,
+      opt = optim(h22.hdl.use, llfun, N=N2, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar2.v.use[-i]), M=M.ref,
                   lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h22.hdl.jackknife = opt$par
       
-      opt=  optim(c(gen.cov,rho12), llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
+      opt=  optim(h12.hdl.use, llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
                   rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                   lam0=unlist(lam.v.use[-i]), lam1=unlist(lam.v.use[-i]), lam2=unlist(lam.v.use[-i]),
                   bstar1=unlist(bstar1.v.use[-i]), bstar2=unlist(bstar2.v.use[-i]),
@@ -536,15 +570,6 @@ HDL.rg.parallel <-
     rownames(estimates.df) <- c("Heritability_1", "Heritability_2", "Genetic_Covariance", "Genetic_Correlation")
     colnames(estimates.df) <- c("Estimate", "se")
     
-    output <- function(value){
-      if(is.na(value)){
-        value.out <- NA
-      } else if(abs(value) < 1e-4){
-        value.out <- formatC(value, format = "e", digits = 2)
-      } else {
-        value.out <- round(value, digits = 4)
-      }
-    }
     
     if(is.na(P)){
       p.out <- NA

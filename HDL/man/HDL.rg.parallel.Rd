@@ -75,5 +75,5 @@ across human complex traits. \emph{Accepted by Nature Genetics, waiting for publ
 HDL tutorial: https://github.com/zhenin/HDL
 }
 \author{
-Zheng Ning
+Zheng Ning, Xia Shen
 }
