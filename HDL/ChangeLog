@@ -1,3 +1,7 @@
+2020-06-08 15:00  zheng
+    * Updated to version 1.3.4
+    * More initial values are tried to avoid convergence problem when estimate h12.
+
 2020-06-07 20:00  zheng
     * Updated to version 1.3.3
     * Point estimates are used as initial values in jackknife.

@@ -162,14 +162,14 @@ HDL.rg.parallel <-
       cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n", file = output.file, append = T)
     }
     if(k1 < length(overlap.snp.MAF.05.list)*0.99){
-      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 1. This may generate bias in estimation. Please make sure that you are using correct reference panel.  \n"
+      error.message <- "Warning: More than 1% SNPs in reference panel are missed in GWAS 1. This may generate bias in estimation. Please make sure that you are using correct reference panel.  \n"
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
       cat(error.message)
     }
     if(k2 < length(overlap.snp.MAF.05.list)*0.99){
-      error.message <- "More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please make sure that you are using correct reference panel.  \n"
+      error.message <- "Warning: More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please make sure that you are using correct reference panel.  \n"
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
@@ -484,6 +484,26 @@ HDL.rg.parallel <-
                 lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
                 bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
                 lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+    if(opt$convergence != 0){
+      starting.value.v <- c(0,-sqrt(h11*h22)*0.5, sqrt(h11*h22)*0.5)
+      k <- 1
+      while(opt$convergence != 0){
+        starting.value <- starting.value.v[k]
+        opt=  optim(c(starting.value,rho12), llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
+                    rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
+                    lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
+                    bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
+                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+        k <- k + 1
+        if(k > length(starting.value.v)){
+          error.message <- "Algorithm failed to converge after trying different initial values. \n"
+          if(output.file != ""){
+            cat(error.message, file = output.file, append = T)
+          }
+          stop(error.message)
+        }
+      }
+    }
     h12.hdl.use <- opt$par
     h12 <- h12.hdl.use[1]
     rg <- h12.hdl.use[1]/sqrt(h11.hdl.use[1]*h22.hdl.use[1])
@@ -517,7 +537,7 @@ HDL.rg.parallel <-
           1) The true heritability is very small;
           2) The sample size is too small;
           3) Many SNPs in the chosen reference panel misses in the GWAS;
-          4) There is severe mismatch between the GWAS sample and the sample for computing reference panel")
+          4) There is a severe mismatch between the GWAS population and the population for computing reference panel")
     }
     cat("\n")
     
@@ -622,7 +642,8 @@ HDL.rg.parallel <-
         cat("Warning: Heritability of one trait was estimated to be 0, which may due to:
             1) The true heritability is very low;
             2) The sample size of the GWAS is too small;
-            3) Many SNPs in the chosen reference panel misse in the GWAS.", file = output.file, append = TRUE)
+            3) Many SNPs in the chosen reference panel misse in the GWAS;
+            4) There is a severe mismatch between the GWAS population and the population for computing reference panel", file = output.file, append = TRUE)
       }
       cat("\n", file = output.file, append = TRUE)
       cat("Analysis finished at",end.time,"\n", file = output.file, append = TRUE)
