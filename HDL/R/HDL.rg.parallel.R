@@ -122,6 +122,11 @@ HDL.rg.parallel <-
     gwas1.df <- gwas1.df %>% filter(SNP %in% snps.name.list)
     gwas2.df <- gwas2.df %>% filter(SNP %in% snps.name.list)
     
+    gwas1.df$A1 <- as.character(gwas1.df$A1)
+    gwas1.df$A2 <- as.character(gwas1.df$A2)
+    gwas2.df$A1 <- as.character(gwas2.df$A1)
+    gwas2.df$A2 <- as.character(gwas2.df$A2)
+    
     
     if(!("Z" %in% colnames(gwas1.df))){
       if(("b" %in% colnames(gwas1.df)) && ("se" %in% colnames(gwas1.df))){
