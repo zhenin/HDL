@@ -102,16 +102,15 @@ HDL.rg.parallel <-
     
     LD.files <- list.files(LD.path)
     
-    if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
-      load(file=paste0(LD.path, "/UKB_snp_counter_overlap_MAF_5.RData"))
-      load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
-    } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
+    if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
       snp_counter_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_counter.*")]
       snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
       load(file=paste(LD.path, snp_counter_file, sep = "/"))
       load(file=paste(LD.path, snp_list_file, sep = "/"))
-      overlap.snp.MAF.05.list <- snps.list.imputed.vector
-      nsnps.list <- nsnps.list.imputed
+      if("nsnps.list.imputed" %in% ls()){
+        snps.name.list <- snps.list.imputed.vector
+        nsnps.list <- nsnps.list.imputed
+      }
     } else{
       error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
       if(output.file != ""){
@@ -120,8 +119,8 @@ HDL.rg.parallel <-
       stop(error.message)
     }
     
-    gwas1.df <- gwas1.df %>% filter(SNP %in% overlap.snp.MAF.05.list)
-    gwas2.df <- gwas2.df %>% filter(SNP %in% overlap.snp.MAF.05.list)
+    gwas1.df <- gwas1.df %>% filter(SNP %in% snps.name.list)
+    gwas2.df <- gwas2.df %>% filter(SNP %in% snps.name.list)
     
     
     if(!("Z" %in% colnames(gwas1.df))){
@@ -150,25 +149,26 @@ HDL.rg.parallel <-
       }
     }
     
-    k1 <- sum(gwas1.df$SNP %in% overlap.snp.MAF.05.list)
-    k2 <- sum(gwas2.df$SNP %in% overlap.snp.MAF.05.list)
-    k1.percent <- paste("(",round(100*k1 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
-    k2.percent <- paste("(",round(100*k2 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
     
-    cat(k1, "out of", length(overlap.snp.MAF.05.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n")
-    cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n")
+    k1 <- nrow(gwas1.df)
+    k2 <- nrow(gwas2.df)
+    k1.percent <- paste("(",round(100*k1 / length(snps.name.list), 2), "%)", sep="") 
+    k2.percent <- paste("(",round(100*k2 / length(snps.name.list), 2), "%)", sep="") 
+    
+    cat(k1, "out of", length(snps.name.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n")
+    cat(k2, "out of", length(snps.name.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n")
     if(output.file != ""){
-      cat(k1, "out of", length(overlap.snp.MAF.05.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n", file = output.file, append = T)
-      cat(k2, "out of", length(overlap.snp.MAF.05.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n", file = output.file, append = T)
+      cat(k1, "out of", length(snps.name.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n", file = output.file, append = T)
+      cat(k2, "out of", length(snps.name.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n", file = output.file, append = T)
     }
-    if(k1 < length(overlap.snp.MAF.05.list)*0.99){
+    if(k1 < length(snps.name.list)*0.99){
       error.message <- "Warning: More than 1% SNPs in reference panel are missed in GWAS 1. This may generate bias in estimation. Please make sure that you are using correct reference panel.  \n"
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
       }
       cat(error.message)
     }
-    if(k2 < length(overlap.snp.MAF.05.list)*0.99){
+    if(k2 < length(snps.name.list)*0.99){
       error.message <- "Warning: More than 1% SNPs in reference panel are missed in GWAS 2. This may generate bias in estimation. Please make sure that you are using correct reference panel.  \n"
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)
@@ -207,16 +207,11 @@ HDL.rg.parallel <-
       piece <- info.pieces.df[i,"piece"]
       ## reference sample ##
       
-      if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
-        load(file=paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000_500banded_90eigen.rda"))
-        snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.bim"))
-      } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
-        load(file=paste0(LD.path, "/ukb_imputed_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
-        snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed_clean.bim"))
-      } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
-        load(file=paste0(LD.path, "/ukb_imputed_hapmap2_chr",chr,".",piece,"_n336000_500banded_99eigen.rda"))
-        snps.ref.df <- read.table(paste0(LD.path, "/ukb_chr",chr,".",piece,"_n336000.imputed.hapmap2_clean.bim"))
-      } 
+      LD_rda_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*rda"))]
+      LD_bim_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*bim"))]
+      load(file=paste(LD.path, LD_rda_file, sep = "/"))
+      snps.ref.df <- read.table(paste(LD.path, LD_bim_file, sep = "/"))
+      
       colnames(snps.ref.df) <- c("chr","id","non","pos","A1","A2")
       snps.ref <- snps.ref.df$id
       A2.ref <- snps.ref.df$A2
