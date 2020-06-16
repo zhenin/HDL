@@ -25,6 +25,37 @@ if(length(log.file) != 0){
 }
 
 
+
+
+library(data.table)
+data.table.version <- packageVersion("data.table")
+if(data.table.version < "1.12.1"){
+  message("Searching for the updated version of package 'data.table' in user's library:")
+  detach("package:data.table", unload=TRUE)
+  library(data.table, lib.loc = Sys.getenv("R_LIBS_USER"))
+}
+
+
+smart.reader <- function(path){
+  path.split <- unlist(strsplit(path, split = "\\."))
+  file.type <- path.split[length(path.split)]
+  if(file.type == "rds"){
+    return(readRDS(path))
+  } else if(file.type == "gz" | file.type == "bgz"){
+    options(datatable.fread.input.cmd.message=FALSE)
+    return(fread(input = paste("zcat",path)))
+  } else{
+    try_error <- try(return(fread(path)))
+    if(!is.null(try_error)){
+      error.message <- "This file type is not supported by fread function in data.table package. Please reformat it to .txt, .csv or .tsv."
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
+    }
+  }
+}
+
 time.start <- date()
 cat("Program starts on",time.start,"\n")
 cat("Loading GWAS summary statistics from",fn,"\n")
@@ -33,13 +64,7 @@ if(length(log.file) != 0){
   cat("Program starts on",time.start,"\n", file = log.file, append = T)
   cat("Loading GWAS summary statistics from",fn,"\n", file = log.file, append = T)
 }
-
-if(summary(file(fn))$class == "gzfile"){
-  gwas.all <- read.table(gzfile(fn), header = T)
-  close(gzfile(fn))
-} else{
-  gwas.all <- read.table(fn, header = T)
-}
+gwas.all <- smart.reader(fn)
 
 cat("Data are loaded successfully. Data wrangling starts. \n")
 if(length(log.file) != 0){
@@ -47,35 +72,28 @@ if(length(log.file) != 0){
 }
 
 LD.files <- list.files(LD.path)
+if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
+  snp_counter_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_counter.*")]
+  snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
+  load(file=paste(LD.path, snp_counter_file, sep = "/"))
+  load(file=paste(LD.path, snp_list_file, sep = "/"))
+  if("nsnps.list.imputed" %in% ls()){
+    snps.name.list <- snps.list.imputed.vector
+    nsnps.list <- nsnps.list.imputed
+  }
+} else{
+  error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
+  if(output.file != ""){
+    cat(error.message, file = output.file, append = T)
+  }
+  stop(error.message)
+}
 
 ## the Neale's UKB GWAS format ##
 if(length(GWAS.type) != 0){
   if(GWAS.type == "UKB.Neale"){
-    if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
-      load(paste0(LD.path, "/snp.dictionary.array.rda"))
-      load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
-    } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
-      load(paste0(LD.path, "/snp.dictionary.imputed.rda"))
-      load(file=paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))
-      overlap.snp.MAF.05.list <- snps.list.imputed.vector
-    } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
-      load(paste0(LD.path, "/snp.dictionary.imputed.rda"))
-      load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
-      overlap.snp.MAF.05.list <- snps.list.imputed.vector
-    } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
-      load(paste0(LD.path, "/snp.dictionary.imputed.rda"))
-      snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
-      load(file=paste(LD.path, snp_list_file, sep = "/"))
-      overlap.snp.MAF.05.list <- snps.list.imputed.vector
-    } else{
-      error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
-      if(length(log.file) != 0){
-        cat(error.message, file = log.file, append = T)
-      }
-      stop(error.message)
-    }
     gwas.hdl.df <- gwas.all %>%
-      inner_join(snp.dictionary %>% filter(rsid %in% overlap.snp.MAF.05.list), by = "variant")  %>%
+      inner_join(snp.dictionary %>% filter(rsid %in% snps.name.list), by = "variant")  %>%
       select(rsid, alt, ref, n_complete_samples, tstat) %>%
       rename(SNP = rsid, A1 = alt, A2 = ref, N = n_complete_samples, Z = tstat)
   }
@@ -90,33 +108,15 @@ if(length(GWAS.type) == 0){
     }
     stop(error.message)
   }
-  if(file.exists(paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))){
-    load(file=paste0(LD.path, "/overlap.snp.MAF.05.list.rda"))
-  } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))){
-    load(file=paste0(LD.path, "/UKB_snp_list_imputed.vector_form.RData"))
-    overlap.snp.MAF.05.list <- snps.list.imputed.vector
-  } else if(file.exists(paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))){
-    load(file=paste0(LD.path, "/UKB_snp_list_imputed.hapmap2.vector_form.RData"))
-    overlap.snp.MAF.05.list <- snps.list.imputed.vector
-  } else if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
-    snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
-    load(file=paste(LD.path, snp_list_file, sep = "/"))
-    overlap.snp.MAF.05.list <- snps.list.imputed.vector
-  } else{
-    error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
-    if(length(log.file) != 0){
-      cat(error.message, file = log.file, append = T)
-    }
-    stop(error.message)
-  }
+
   if(length(Z) != 0){
     gwas.hdl.df <- gwas.all %>%
       rename_(SNP = SNP, A1 = A1, A2 = A2, N = N, Z = Z) %>%
-      filter(SNP %in% overlap.snp.MAF.05.list)
+      filter(SNP %in% snps.name.list)
   } else{
     gwas.hdl.df <- gwas.all %>%
       rename_(SNP = SNP, A1 = A1, A2 = A2, N = N, b = b, se = se) %>%
-      filter(SNP %in% overlap.snp.MAF.05.list) %>% mutate(Z = (b/se)) %>%
+      filter(SNP %in% snps.name.list) %>% mutate(Z = (b/se)) %>%
       select(SNP, A1, A2, N, Z)
   }
 }
@@ -125,13 +125,13 @@ if(length(log.file) != 0){
   cat("Data wrangling completed. \n", file = log.file, append = T)
 }
 
-k1 <- sum(gwas.hdl.df$SNP %in% overlap.snp.MAF.05.list)
-k1.percent <- paste("(",round(100*k1 / length(overlap.snp.MAF.05.list), 2), "%)", sep="") 
-cat(k1, "out of", length(overlap.snp.MAF.05.list), k1.percent, "SNPs in reference panel are available in GWAS."," \n")
+k1 <- sum(gwas.hdl.df$SNP %in% snps.name.list)
+k1.percent <- paste("(",round(100*k1 / length(snps.name.list), 2), "%)", sep="") 
+cat(k1, "out of", length(snps.name.list), k1.percent, "SNPs in reference panel are available in GWAS."," \n")
 if(length(log.file) != 0){
-  cat(k1, "out of", length(overlap.snp.MAF.05.list), k1.percent, "SNPs in reference panel are available in GWAS."," \n", file = log.file, append = T)
+  cat(k1, "out of", length(snps.name.list), k1.percent, "SNPs in reference panel are available in GWAS."," \n", file = log.file, append = T)
 }
-if(k1 < length(overlap.snp.MAF.05.list)*0.99){
+if(k1 < length(snps.name.list)*0.99){
   cat("More than 1% SNPs in reference panel are missed in GWAS. This missing rate is too high to be used in HDL. Please check. \n")
   if(length(log.file) != 0){
     cat("More than 1% SNPs in reference panel are missed in GWAS. This missing rate is too high to be used in HDL. Please check. \n", file = log.file, append = T)

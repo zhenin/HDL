@@ -1,3 +1,8 @@
+2020-06-16 22:30  zheng
+    * Updated to version 1.3.5
+    * In command line version, reading data is handled by data.table::fread. So reading data becomes faster and more file types are allowed as input in HDL.run.R, HDL.parallel.run.R and HDL.data.wrangling.
+    * By reading the new uncompressed reference panel files, HDL becomes faster.
+
 2020-06-08 15:00  zheng
     * Updated to version 1.3.4
     * More initial values are tried to avoid convergence problem when estimate h12.

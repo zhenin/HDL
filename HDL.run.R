@@ -23,23 +23,36 @@ if(output.file != ""){
   }
 }
 
+library(data.table)
+data.table.version <- packageVersion("data.table")
+if(data.table.version < "1.12.1"){
+  message("Searching for the updated version of package 'data.table' in user's library:")
+  detach("package:data.table", unload=TRUE)
+  library(data.table, lib.loc = Sys.getenv("R_LIBS_USER"))
+}
+
+
 smart.reader <- function(path){
   path.split <- unlist(strsplit(path, split = "\\."))
   file.type <- path.split[length(path.split)]
   if(file.type == "rds"){
     return(readRDS(path))
-  } else if(file.type == "txt"){
-    return(read.table(file = path, header = T))
-  } else if(file.type == "sumstats"){
-    return(read.table(file = path, header = T))
+  } else if(file.type == "gz" | file.type == "bgz"){
+    options(datatable.fread.input.cmd.message=FALSE)
+    return(fread(input = paste("zcat",path)))
   } else{
-    error.message <- "The extension of input file has to be .rds or .txt!"
-    if(output.file != ""){
-      cat(error.message, file = output.file, append = T)
+    try_error <- try(return(fread(path)))
+    if(!is.null(try_error)){
+      error.message <- "This file type is not supported by fread function in data.table package. Please reformat it to .txt, .csv or .tsv."
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
     }
-    stop(error.message)
   }
 }
+
+
 message <- "Loading GWAS1 ... \n"
 if(output.file != ""){
   cat(message, file = output.file, append = T)
