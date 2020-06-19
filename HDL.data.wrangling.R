@@ -43,7 +43,7 @@ smart.reader <- function(path){
     return(readRDS(path))
   } else if(file.type == "gz" | file.type == "bgz"){
     options(datatable.fread.input.cmd.message=FALSE)
-    return(fread(input = paste("zcat",path)))
+    return(fread(input = paste("zcat < ",path)))
   } else{
     try_error <- try(return(fread(path)))
     if(!is.null(try_error)){
@@ -92,6 +92,8 @@ if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
 ## the Neale's UKB GWAS format ##
 if(length(GWAS.type) != 0){
   if(GWAS.type == "UKB.Neale"){
+    dictionary_file <- LD.files[grep(x = LD.files, pattern = "snp.dictionary.*")]
+    load(file=paste(LD.path, dictionary_file, sep = "/"))
     gwas.hdl.df <- gwas.all %>%
       inner_join(snp.dictionary %>% filter(rsid %in% snps.name.list), by = "variant")  %>%
       select(rsid, alt, ref, n_complete_samples, tstat) %>%

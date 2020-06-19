@@ -39,7 +39,7 @@ smart.reader <- function(path){
     return(readRDS(path))
   } else if(file.type == "gz" | file.type == "bgz"){
     options(datatable.fread.input.cmd.message=FALSE)
-    return(fread(input = paste("zcat",path)))
+    return(fread(input = paste("zcat < ",path)))
   } else{
     try_error <- try(return(fread(path)))
     if(!is.null(try_error)){
