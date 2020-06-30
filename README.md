@@ -18,6 +18,12 @@ we have computed the LD matrices and their eigen-decomposition from 336,000 Geno
 You can download these pre-computed reference files following the [instruction](https://github.com/zhenin/HDL/wiki/Reference-panels) 
 in the [wiki](https://github.com/zhenin/HDL/wiki).
 
+Citation
+--------
+If you use the HDL software, please cite
+
+[Ning, Z., Pawitan, Y. & Shen, X. High-definition likelihood inference of genetic correlations across human complex traits. _Nat Genet_ (2020)](https://www.nature.com/articles/s41588-020-0653-y).
+
 
 For Help
 --------
@@ -29,3 +35,8 @@ For direct R documentation of `HDL.rg` function, you can use a question mark in 
 ```
 
 If you have specific questions, you may email the maintainer of `HDL` via <zheng.ning@ki.se>.
+
+Acknowledgement
+--------
+
+Thank all of you who have supported this project or repported bugs! Special thanks to Dr. Paul RHJ Timmers (The University of Edinburgh) for his active bug reporting of eraly HDL versions.
