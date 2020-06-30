@@ -39,4 +39,4 @@ If you have specific questions, you may email the maintainer of `HDL` via <zheng
 Acknowledgement
 --------
 
-Thank all of you who have supported this project or repported bugs! Special thanks to Dr. Paul RHJ Timmers (The University of Edinburgh) for his active bug reporting of eraly HDL versions.
+Thank all of you who have supported this project or repported bugs! Special thanks to Dr. Paul RHJ Timmers (The University of Edinburgh) for his active bug reporting of early HDL versions.
