@@ -46,7 +46,7 @@ smart.reader <- function(path){
     return(fread(input = paste("zcat < ",path)))
   } else{
     try_error <- try(return(fread(path)))
-    if(!is.null(try_error)){
+    if(class(try_error) == "try-error"){
       error.message <- "This file type is not supported by fread function in data.table package. Please reformat it to .txt, .csv or .tsv."
       if(output.file != ""){
         cat(error.message, file = output.file, append = T)

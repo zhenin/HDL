@@ -148,6 +148,9 @@ HDL.rg <-
       }
     }
     
+    gwas1.df <- gwas1.df %>% filter(!is.na(Z))
+    gwas2.df <- gwas2.df %>% filter(!is.na(Z))
+    
     
     k1 <- nrow(gwas1.df)
     k2 <- nrow(gwas2.df)
@@ -386,7 +389,9 @@ HDL.rg <-
         h22.hdl.95 = opt$par
         
         if(sum(unlist(eigen.num.v.95)) == sum(unlist(eigen.num.v.99))){
-          if((h11.hdl.90[1]-h11.hdl.95[1])/abs(h11.hdl.95[1]) < 0.2 &&
+          if(h11.hdl.95[1] != 0 &&
+             h22.hdl.95[1] != 0 &&
+             (h11.hdl.90[1]-h11.hdl.95[1])/abs(h11.hdl.95[1]) < 0.2 &&
              (h22.hdl.90[1]-h22.hdl.95[1])/abs(h22.hdl.95[1]) < 0.2){
             lam.v.use <- lam.v.95
             bstar1.v.use <- bstar1.v.95
@@ -414,7 +419,9 @@ HDL.rg <-
                       lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
           h22.hdl.99 = opt$par
           
-          if((h11.hdl.90[1]-h11.hdl.99[1])/abs(h11.hdl.99[1]) < 0.2 &&
+          if(h11.hdl.99[1] != 0 &&
+             h22.hdl.99[1] != 0 &&
+             (h11.hdl.90[1]-h11.hdl.99[1])/abs(h11.hdl.99[1]) < 0.2 &&
              (h22.hdl.90[1]-h22.hdl.99[1])/abs(h22.hdl.99[1]) < 0.2){
             lam.v.use <- lam.v.99
             bstar1.v.use <- bstar1.v.99
@@ -423,7 +430,9 @@ HDL.rg <-
             h22.hdl.use <- h22.hdl.99
             eigen.use <- 0.99
           } else{
-            if((h11.hdl.90[1]-h11.hdl.95[1])/abs(h11.hdl.95[1]) < 0.2 &&
+            if(h11.hdl.95[1] != 0 &&
+               h22.hdl.95[1] != 0 &&
+               (h11.hdl.90[1]-h11.hdl.95[1])/abs(h11.hdl.95[1]) < 0.2 &&
                (h22.hdl.90[1]-h22.hdl.95[1])/abs(h22.hdl.95[1]) < 0.2){
               lam.v.use <- lam.v.95
               bstar1.v.use <- bstar1.v.95

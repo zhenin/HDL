@@ -68,8 +68,7 @@ res.HDL
 }
 }
 \references{
-Ning Z, Pawitan Y, Shen X (2020). High-definition likelihood inference of genetic correlations 
-across human complex traits. \emph{Accepted by Nature Genetics, waiting for publishing}.
+Ning, Z., Pawitan, Y. & Shen, X. High-definition likelihood inference of genetic correlations across human complex traits. Nat Genet (2020).
 }
 \seealso{
 HDL tutorial: https://github.com/zhenin/HDL

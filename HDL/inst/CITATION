@@ -5,16 +5,13 @@ citEntry(entry="Article",
          author = personList(as.person("Zheng Ning"),
                              as.person("Yudi Pawitan"),
                              as.person("Xia Shen")),
-         journal      = "Submitted",
-         year         = "2019",
+         journal      = "Nat Genet",
+         year         = "2020",
          volume       = "0",
          number       = "0",
          pages        = "0-0",
-         url          = "",
+         url          = "https://doi.org/10.1038/s41588-020-0653-y",
          
          textVersion = 
-         paste("Ning Z, Pawitan Y, Shen X (2019).", 
-               "High-definition likelihood inference of genetic correlations across human complex traits.",
-               "Submitted.",
-               "URL ")
+         paste("Ning, Z., Pawitan, Y. & Shen, X. High-definition likelihood inference of genetic correlations across human complex traits. Nat Genet (2020). https://doi.org/10.1038/s41588-020-0653-y")
 )
