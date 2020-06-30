@@ -34,7 +34,9 @@ For direct R documentation of `HDL.rg` function, you can use a question mark in 
 ?HDL.rg
 ```
 
-If you have specific questions, you may email the maintainer of `HDL` via <zheng.ning@ki.se>.
+Some bugs might have been reported and solved in the latest version of `HDL`. Therefore, please make sure your `HDL` has been updated to the latest version (see [here](https://github.com/zhenin/HDL/wiki/Installation-and-update#Updating-HDL) for how to update `HDL`).
+
+If you have questions, you may find the [FAQ](https://github.com/zhenin/HDL/wiki/FAQ) page is helpful. If you want further discussion or still have questions, please feel free to email the maintainer of `HDL` via <zheng.ning@ki.se>.
 
 Acknowledgement
 --------
