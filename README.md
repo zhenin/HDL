@@ -8,6 +8,7 @@ you can use it with the command line. So no worry if you are not an R user.
 
 In [the wiki](https://github.com/zhenin/HDL/wiki), we provide a detailed tutorial for the application of `HDL` together with real examples. 
 
+
 What data are required?
 -----------------------
 
@@ -17,6 +18,11 @@ What data are required?
 we have computed the LD matrices and their eigen-decomposition from 336,000 Genomic British individuals in UK Biobank. 
 You can download these pre-computed reference files following the [instruction](https://github.com/zhenin/HDL/wiki/Reference-panels) 
 in the [wiki](https://github.com/zhenin/HDL/wiki).
+
+HDL in a nut shell
+-----------------------
+A short presentation about the main ideas and results of HDL given at EMGM 2020 is available [here](https://www.youtube.com/watch?v=Q2VR1iL4l9o&list=PLnJh2XY-rMTnOdlGMEUgJfoS_Uu9Qcun0&index=6&t=0s) from 37 to 49 minutes.
+
 
 Citation
 --------
