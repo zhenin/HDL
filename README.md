@@ -1,6 +1,7 @@
 HDL has been updated to v1.3.7 (2020-07-02)
 ------------
 *   New function `HDL.h2` is added to return the point estimate and standard error of the narrow sense heritability of one trait based on GWAS summary statistics. 
+*   Please see [here](https://github.com/zhenin/HDL/wiki/Syntax-and-results-of-HDL#Estimating-heritability-using-HDL) for introducing how to use `HDL.h2`.
 
 What is HDL?
 ------------
