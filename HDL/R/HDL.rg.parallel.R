@@ -18,11 +18,13 @@
 #' @param eigen.cut Which eigenvalues and eigenvectors in each LD score matrix should be used for HDL. 
 #' Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For example, eigen.cut = 0.99 means using the leading eigenvalues explaining 99% of the variance
 #' and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used. 
-#' @note Users can download the eigenvalues and eigenvectors of LD correlation matrices from https://www.dropbox.com/sh/ai2o21gxklhlvs3/AABPD7nKv3nXcvmoQQ3cGh9Qa?dl=0. 
-#' These are the LD matrices and their eigen-decomposition from 335,265 genomic British UK Biobank individuals. Two sets of reference panel are provided: 
-#' 1) 307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping.
-#' 2) 1,029,876 QCed UK Biobank imputed SNPs. The size is about 31 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. 
+#' @note Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://github.com/zhenin/HDL/wiki/Reference-panels
+#' These are the LD matrices and their eigen-decomposition from 335,265 genomic British UK Biobank individuals. Three sets of reference panel are provided: 
+#' 1) 1,029,876 QCed UK Biobank imputed HapMap3 SNPs. The size is about 33 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. 
 #' Therefore if the GWAS includes most of the HapMap3 SNPs, then we recommend using the imputed reference panel.
+#' 2) 769,306 QCed UK Biobank imputed HapMap2 SNPs. The size is about 18 GB after unzipping.If one of your GWAS includes most of the HapMap 2 SNPs, but many SNPs (more than 1%) in the above HapMap 3 reference panel are absent, 
+#' then this HapMap2 panel is more proper to be used for HDL. 
+#' 3) 307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping.
 #' 
 #' 
 #' @return A list is returned with:

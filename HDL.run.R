@@ -5,6 +5,7 @@ if(length(args) == 0){
 }
 args.print <- paste("Function arguments:", paste(args, collapse = "\n"), sep = "\n")
 cat(args.print, "\n\n")
+gwas.df.path <- gsub(x = args[grep(x = args, pattern = "gwas.df=")], pattern = "gwas.df=", replacement = "")
 gwas1.df.path <- gsub(x = args[grep(x = args, pattern = "gwas1.df=")], pattern = "gwas1.df=", replacement = "")
 gwas2.df.path <- gsub(x = args[grep(x = args, pattern = "gwas2.df=")], pattern = "gwas2.df=", replacement = "")
 LD.path <- gsub(x = args[grep(x = args, pattern = "LD.path=")], pattern = "LD.path=", replacement = "")
@@ -52,36 +53,62 @@ smart.reader <- function(path){
   }
 }
 
-
-message <- "Loading GWAS1 ... \n"
-if(output.file != ""){
-  cat(message, file = output.file, append = T)
+if(length(gwas.df.path) == 0 && length(gwas1.df.path) != 0 && length(gwas2.df.path) != 0){
+  message <- "Loading GWAS1 ... \n"
+  if(output.file != ""){
+    cat(message, file = output.file, append = T)
+  }
+  cat(message)
+  gwas1.df <- smart.reader(gwas1.df.path)
+  
+  message <- "Loading GWAS2 ... \n"
+  if(output.file != ""){
+    cat(message, file = output.file, append = T)
+  }
+  cat(message)
+  gwas2.df <- smart.reader(gwas2.df.path)
+  
+  if(length(Nref)==0)
+    Nref <- 335265
+  if(length(N0) == 0)
+    N0 <- min(gwas1.df$N, gwas2.df$N)
+  if(length(eigen.cut)==0)
+    eigen.cut <- "automatic"
+  
+  ##### Run HDL.rg #####
+  
+  library(HDL)
+  res.HDL <- HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file, eigen.cut = eigen.cut)
+  
+  if(output.file != ""){
+    fConn <- file(output.file)
+    Lines <- readLines(fConn)
+    writeLines(c(args.print,Lines), con = fConn)
+    close(fConn)
+  }
+} else if(length(gwas.df.path) != 0 && length(gwas1.df.path) == 0 && length(gwas2.df.path) == 0){
+  message <- "Loading GWAS ... \n"
+  if(output.file != ""){
+    cat(message, file = output.file, append = T)
+  }
+  cat(message)
+  gwas.df <- smart.reader(gwas.df.path)
+  
+  if(length(Nref)==0)
+    Nref <- 335265
+  if(length(eigen.cut)==0)
+    eigen.cut <- "automatic"
+  
+  ##### Run HDL.h2 #####
+  
+  library(HDL)
+  res.HDL <- HDL.h2(gwas.df, LD.path, Nref = Nref, output.file = output.file, eigen.cut = eigen.cut)
+  
+  if(output.file != ""){
+    fConn <- file(output.file)
+    Lines <- readLines(fConn)
+    writeLines(c(args.print,Lines), con = fConn)
+    close(fConn)
+  }
 }
-cat(message)
-gwas1.df <- smart.reader(gwas1.df.path)
 
-message <- "Loading GWAS2 ... \n"
-if(output.file != ""){
-  cat(message, file = output.file, append = T)
-}
-cat(message)
-gwas2.df <- smart.reader(gwas2.df.path)
-
-if(length(Nref)==0)
-  Nref <- 335265
-if(length(N0) == 0)
-  N0 <- min(gwas1.df$N, gwas2.df$N)
-if(length(eigen.cut)==0)
-  eigen.cut <- "automatic"
-
-##### Run HDL #####
-
-library(HDL)
-res.HDL <- HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file, eigen.cut = eigen.cut)
-
-if(output.file != ""){
-  fConn <- file(output.file)
-  Lines <- readLines(fConn)
-  writeLines(c(args.print,Lines), con = fConn)
-  close(fConn)
-}

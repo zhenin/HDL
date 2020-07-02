@@ -1,3 +1,7 @@
+2020-07-02 18:40  zheng
+    * Updated to version 1.3.7
+    * HDL.h2 is added to return the point estimate and standard error of the narrow sense heritability of one trait based on GWAS summary statistics.  
+
 2020-06-30 23:40  zheng
     * Updated to version 1.3.6
     * HDL was formally published on Nat Genet! Citation information has been updated.
