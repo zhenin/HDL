@@ -2,7 +2,7 @@
 % Please edit documentation in R/HDL.h2.R
 \name{HDL.h2}
 \alias{HDL.h2}
-\title{High-definition likelihood inference of heritabiity (HDL)}
+\title{High-definition likelihood inference of SNP-based heritabiity (HDL)}
 \usage{
 HDL.h2(gwas.df, LD.path, Nref = 335265, output.file = "",
   eigen.cut = "automatic")
@@ -25,7 +25,7 @@ and their correspondent eigenvectors. If the default 'automatic' is used, the ei
 \value{
 A list is returned with:
 \itemize{
-\item{h2 }{The estimated SNP-heritability.}
+\item{h2 }{The estimated SNP-based heritability.}
 \item{h2.se }{The standard error of the estimated heritability.}
 \item{P }{P-value based on Wald test.}
 \item{eigen.use }{The eigen.cut used in computation.}

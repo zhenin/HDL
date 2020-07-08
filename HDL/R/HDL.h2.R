@@ -1,4 +1,4 @@
-#' High-definition likelihood inference of heritabiity (HDL)
+#' High-definition likelihood inference of SNP-based heritabiity (HDL)
 #' 
 #' The function returns the estimate and standard error of the SNP-heritability of one trait based on GWAS summary statistics. 
 #' 
@@ -21,7 +21,7 @@
 #' 
 #' @return A list is returned with:
 #' \itemize{
-#' \item{h2 }{The estimated SNP-heritability.}
+#' \item{h2 }{The estimated SNP-based heritability.}
 #' \item{h2.se }{The standard error of the estimated heritability.}
 #' \item{P }{P-value based on Wald test.}
 #' \item{eigen.use }{The eigen.cut used in computation.}
