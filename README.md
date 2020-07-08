@@ -1,3 +1,10 @@
+HDL has been updated to v1.3.7 (2020-07-02)
+------------
+*   New function `HDL.h2` is added to return the point estimate and standard error of the SNP-heritability of one trait based on GWAS summary statistics. 
+*   Please see [here](https://github.com/zhenin/HDL/wiki/Syntax-and-results-of-HDL#Estimating-heritability-using-HDL) for introducing how to use `HDL.h2`.
+*   Full change log can be found [here](https://github.com/zhenin/HDL/blob/master/HDL/ChangeLog).
+
+
 What is HDL?
 ------------
 
@@ -47,4 +54,4 @@ If you have questions, you may find the [FAQ](https://github.com/zhenin/HDL/wiki
 Acknowledgement
 --------
 
-Thank all of you who have supported this project or repported bugs! Special thanks to Dr. Paul RHJ Timmers (The University of Edinburgh) for his active bug reporting of early HDL versions.
+Thank all of you who have supported this project or reported bugs! Special thanks to Dr. Paul RHJ Timmers (The University of Edinburgh) for his active bug reporting of early HDL versions.
