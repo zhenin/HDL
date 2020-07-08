@@ -25,14 +25,14 @@ and their correspondent eigenvectors. If the default 'automatic' is used, the ei
 \value{
 A list is returned with:
 \itemize{
-\item{h2 }{The estimated heritability.}
+\item{h2 }{The estimated SNP-heritability.}
 \item{h2.se }{The standard error of the estimated heritability.}
 \item{P }{P-value based on Wald test.}
 \item{eigen.use }{The eigen.cut used in computation.}
 }
 }
 \description{
-The function returns the estimate and standard error of the narrow sense heritability of one trait based on GWAS summary statistics.
+The function returns the estimate and standard error of the SNP-heritability of one trait based on GWAS summary statistics.
 }
 \note{
 Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://github.com/zhenin/HDL/wiki/Reference-panels

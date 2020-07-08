@@ -558,7 +558,7 @@ HDL.rg <-
     }
     counter <- 0
     message <- ""
-    rg.jackknife <- h11.jackknife <- h12.jackknife <- h22.jackknife <- length(lam.v)
+    rg.jackknife <- h11.jackknife <- h12.jackknife <- h22.jackknife <- numeric(length(lam.v))
     for(i in 1:length(lam.v)){
       opt = optim(h11.hdl.use, llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
                   lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
