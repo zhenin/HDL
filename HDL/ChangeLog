@@ -1,3 +1,7 @@
+2020-07-12 22:20  zheng
+    * Updated to version 1.3.8
+    * A new optional argument `jackknife.df` is added. By setting `jackknife.df=TRUE`, it allows to output the block-jackknife estimates of heritabilities, genetic covariance and genetic correlation.
+
 2020-07-02 18:40  zheng
     * Updated to version 1.3.7
     * HDL.h2 is added to return the point estimate and standard error of the narrow sense heritability of one trait based on GWAS summary statistics.  

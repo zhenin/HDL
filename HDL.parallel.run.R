@@ -23,6 +23,8 @@ N0 <- gsub(x = args[grep(x = args, pattern = "N0=")], pattern = "N0=", replaceme
 output.file <- gsub(x = args[grep(x = args, pattern = "output.file=")], pattern = "output.file=", replacement = "")
 numCores <- gsub(x = args[grep(x = args, pattern = "numCores=")], pattern = "numCores=", replacement = "")
 eigen.cut <- gsub(x = args[grep(x = args, pattern = "eigen.cut=")], pattern = "eigen.cut=", replacement = "")
+jackknife.df <- gsub(x = args[grep(x = args, pattern = "jackknife.df=")], pattern = "jackknife.df=", replacement = "")
+
 
 
 if(length(output.file) == 0){
@@ -84,16 +86,22 @@ if(length(N0) == 0)
   N0 <- min(gwas1.df$N, gwas2.df$N)
 if(length(eigen.cut)==0)
   eigen.cut <- "automatic"
+if(length(jackknife.df)==0)
+  jackknife.df <- FALSE
 
 
 ##### Run HDL #####
 
 library(HDL)
-res.HDL <- HDL.rg.parallel(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file, numCores = numCores, eigen.cut = eigen.cut)
+res.HDL <- HDL.rg.parallel(gwas1.df, gwas2.df, LD.path, Nref = Nref, N0 = N0, output.file = output.file, 
+                           numCores = numCores, eigen.cut = eigen.cut, jackknife.df = jackknife.df)
 
 if(output.file != ""){
   fConn <- file(output.file)
   Lines <- readLines(fConn)
   writeLines(c(args.print,Lines), con = fConn)
   close(fConn)
+  if(jackknife.df == TRUE){
+    write.table(res.HDL$jackknife.df, file = paste0(output.file,"_jackknife.df",".txt"))
+  }
 }

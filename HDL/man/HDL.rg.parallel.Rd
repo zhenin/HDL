@@ -6,7 +6,7 @@
 \usage{
 HDL.rg.parallel(gwas1.df, gwas2.df, LD.path, Nref = 335265,
   N0 = min(gwas1.df$N, gwas2.df$N), output.file = "", numCores = 2,
-  eigen.cut = "automatic")
+  eigen.cut = "automatic", jackknife.df = FALSE)
 }
 \arguments{
 \item{gwas1.df}{A data frame including GWAS summary statistics of genetic variants for trait 1. 
@@ -31,6 +31,8 @@ If not given, the default value is set to the minimum sample size across all SNP
 \item{eigen.cut}{Which eigenvalues and eigenvectors in each LD score matrix should be used for HDL. 
 Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For example, eigen.cut = 0.99 means using the leading eigenvalues explaining 99% of the variance
 and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used.}
+
+\item{jackknife.df}{Logical, FALSE by default. Should the block-jackknife estimates be returned?}
 }
 \value{
 A list is returned with:
@@ -40,6 +42,7 @@ A list is returned with:
 \item{P }{P-value based on Wald test.}
 \item{estimates.df }{A detailed matrix includes the estimates and standard errors of heritabilities, genetic covariance and genetic correlation.}
 \item{eigen.use }{The eigen.cut used in computation.}
+\item{jackknife.df }{Only if argument `jackknife.df` is true. A matrix includes the block-jackknife estimates of heritabilities, genetic covariance and genetic correlation.}
 }
 }
 \description{

@@ -60,7 +60,8 @@
 #' 
 
 HDL.rg <-
-  function(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N, gwas2.df$N), output.file = "", eigen.cut = "automatic"){
+  function(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N, gwas2.df$N), output.file = "", eigen.cut = "automatic", 
+           jackknife.df = FALSE){
     
     if(output.file != ""){
       if(file.exists(output.file) == T){
@@ -601,6 +602,8 @@ HDL.rg <-
     rownames(estimates.df) <- c("Heritability_1", "Heritability_2", "Genetic_Covariance", "Genetic_Correlation")
     colnames(estimates.df) <- c("Estimate", "se")
     
+    
+    
     if(is.na(P)){
       p.out <- NA
     } else{
@@ -661,7 +664,13 @@ HDL.rg <-
       cat("\n")
       cat("The results were saved to", output.file, file = output.file, append = TRUE)
       cat("\n", file = output.file, append = TRUE)
-      }
+    }
+    
+    if(jackknife.df == TRUE){
+      jackknife.df <- rbind(h11.jackknife, h22.jackknife, h12.jackknife, rg.jackknife)
+      rownames(jackknife.df) <- c("Heritability_1", "Heritability_2", "Genetic_Covariance", "Genetic_Correlation")
+      return(list(rg = rg, rg.se = rg.se, P = P, estimates.df = estimates.df, eigen.use = eigen.use, jackknife.df = jackknife.df))
+    }
     
     return(list(rg = rg, rg.se = rg.se, P = P, estimates.df = estimates.df, eigen.use = eigen.use))
     }
