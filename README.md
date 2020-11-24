@@ -1,14 +1,13 @@
+HDL has been updated to v1.3.9 (2020-11-24)
+------------
+*   SNPs without N information are now excluded during data loading. 
+*   A bug related to lower case A1 and A2 is fixed. The bug might lead to h2 mistakenly estimated to be 0.
+
+
 HDL has been updated to v1.3.8 (2020-07-12)
 ------------
 * A new optional argument `jackknife.df` is added. By setting `jackknife.df=TRUE`, it allows to output the block-jackknife estimates of heritabilities, genetic covariance and genetic correlation. 
 *   Please see [here](https://github.com/zhenin/HDL/wiki/Syntax-and-results-of-HDL#Estimating-genetic-correlation-using-HDL) for more details about the new argument `jackknife.df`.
-*   Full change log can be found [here](https://github.com/zhenin/HDL/blob/master/HDL/ChangeLog).
-
-
-HDL has been updated to v1.3.7 (2020-07-02)
-------------
-*   New function `HDL.h2` is added to return the point estimate and standard error of the SNP-based heritability of one trait based on GWAS summary statistics. 
-*   Please see [here](https://github.com/zhenin/HDL/wiki/Syntax-and-results-of-HDL#Estimating-heritability-using-HDL) for introducing how to use `HDL.h2`.
 *   Full change log can be found [here](https://github.com/zhenin/HDL/blob/master/HDL/ChangeLog).
 
 
