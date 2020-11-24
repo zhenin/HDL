@@ -125,10 +125,10 @@ HDL.rg.parallel <-
     gwas1.df <- gwas1.df %>% filter(SNP %in% snps.name.list)
     gwas2.df <- gwas2.df %>% filter(SNP %in% snps.name.list)
     
-    gwas1.df$A1 <- as.character(gwas1.df$A1)
-    gwas1.df$A2 <- as.character(gwas1.df$A2)
-    gwas2.df$A1 <- as.character(gwas2.df$A1)
-    gwas2.df$A2 <- as.character(gwas2.df$A2)
+    gwas1.df$A1 <- toupper(as.character(gwas1.df$A1))
+    gwas1.df$A2 <- toupper(as.character(gwas1.df$A2))
+    gwas2.df$A1 <- toupper(as.character(gwas2.df$A1))
+    gwas2.df$A2 <- toupper(as.character(gwas2.df$A2))
     
     
     if(!("Z" %in% colnames(gwas1.df))){
@@ -157,8 +157,8 @@ HDL.rg.parallel <-
       }
     }
     
-    gwas1.df <- gwas1.df %>% filter(!is.na(Z))
-    gwas2.df <- gwas2.df %>% filter(!is.na(Z))
+    gwas1.df <- gwas1.df %>% filter(!is.na(Z), !is.na(N))
+    gwas2.df <- gwas2.df %>% filter(!is.na(Z), !is.na(N))
     
     
     k1 <- nrow(gwas1.df)

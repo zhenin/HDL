@@ -1,3 +1,8 @@
+2020-11-24 11:20  zheng
+    * Updated to version 1.3.9
+    * SNPs without N information are now excluded during data loading
+    * A bug related to lower case A1 and A2 is fixed. The bug might lead to h2 mistakenly estimated to be 0.
+
 2020-07-12 22:20  zheng
     * Updated to version 1.3.8
     * A new optional argument `jackknife.df` is added. By setting `jackknife.df=TRUE`, it allows to output the block-jackknife estimates of heritabilities, genetic covariance and genetic correlation.

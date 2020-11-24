@@ -106,8 +106,8 @@ HDL.h2 <-
     
     gwas.df <- gwas.df %>% filter(SNP %in% snps.name.list)
     
-    gwas.df$A1 <- as.character(gwas.df$A1)
-    gwas.df$A2 <- as.character(gwas.df$A2)
+    gwas.df$A1 <- toupper(as.character(gwas.df$A1))
+    gwas.df$A2 <- toupper(as.character(gwas.df$A2))
     
     
     
@@ -125,7 +125,7 @@ HDL.h2 <-
     }
     
     
-    gwas.df <- gwas.df %>% filter(!is.na(Z))
+    gwas.df <- gwas.df %>% filter(!is.na(Z), !is.na(N))
     
     k1 <- nrow(gwas.df)
     k1.percent <- paste("(",round(100*k1 / length(snps.name.list), 2), "%)", sep="") 
