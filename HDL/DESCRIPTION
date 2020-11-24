@@ -1,8 +1,8 @@
 Package: HDL
 Type: Package
 Title: High-definition likelihood inference of genetic correlations and heritabilities (HDL)
-Version: 1.3.8
-Date: 2020-07-12
+Version: 1.3.9
+Date: 2020-11-24
 Author: Zheng Ning, Xia Shen
 Maintainer: Zheng Ning <zheng.ning@ki.se>
 Description: The functions return estimation and standard error of genetic correlation and heritabilities of traits based on GWAS summary statistics. 
