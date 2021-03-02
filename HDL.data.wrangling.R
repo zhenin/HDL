@@ -72,9 +72,9 @@ if(length(log.file) != 0){
 }
 
 LD.files <- list.files(LD.path)
-if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
-  snp_counter_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_counter.*")]
-  snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
+if(any(grepl(x = LD.files, pattern = ".*_snp_counter.*"))){
+  snp_counter_file <- LD.files[grep(x = LD.files, pattern = ".*_snp_counter.*")]
+  snp_list_file <- LD.files[grep(x = LD.files, pattern = ".*_snp_list.*")]
   load(file=paste(LD.path, snp_counter_file, sep = "/"))
   load(file=paste(LD.path, snp_list_file, sep = "/"))
   if("nsnps.list.imputed" %in% ls()){
