@@ -160,8 +160,8 @@ HDL.h2 <-
         
         ## reference sample ##
         
-        LD_rda_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*rda"))]
-        LD_bim_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, ".*bim"))]
+        LD_rda_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, "_.*rda"))]
+        LD_bim_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, "_.*bim"))]
         load(file=paste(LD.path, LD_rda_file, sep = "/"))
         snps.ref.df <- read.table(paste(LD.path, LD_bim_file, sep = "/"))
         
