@@ -1,3 +1,10 @@
+HDL has been updated to v1.3.10 (2020-04-05)
+------------
+* A new optional argument `fill.missing.N` is added in both the R version and the command line version. If NULL (default), the SNPs with missing N are removed. One of "median", "min" or "max" can be given so that the missing N will be filled accordingly. For example, "median" means the missing N are filled with the median N of the SNPs with available N.
+* A new optional argument `intercept.output` is added in the R version for those who are interested in. By setting `intercept.output=TRUE`, the intercept terms estimates and se will be reported in estimates.df.
+* A bug related to multiallelic or duplicated SNPs is fixed.
+* Codes have been added to handle when column `b` is OR instead of log(OR).
+
 HDL has been updated to v1.3.9 (2020-11-24)
 ------------
 *   SNPs without N information are now excluded during data loading. 
