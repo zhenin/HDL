@@ -5,16 +5,17 @@
 \title{High-definition likelihood inference of genetic correlations (HDL)}
 \usage{
 HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N,
-  gwas2.df$N), output.file = "", eigen.cut = "automatic", jackknife.df = FALSE)
+  gwas2.df$N), output.file = "", eigen.cut = "automatic", jackknife.df = FALSE, 
+  intercept.output = FALSE, fill.missing.N = NULL)
 }
 \arguments{
 \item{gwas1.df}{A data frame including GWAS summary statistics of genetic variants for trait 1. 
 The input data frame should include following columns: SNP, SNP ID; A1, effect allele; A2, reference allele;
-N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS.}
+N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS. If the GWAS is based on logistic regression, `b` should be the logarithm of OR (odds ratio) and `se` is the standard error of log(OR). Notice: SNPs with missing N will be removed.}
 
 \item{gwas2.df}{A data frame including GWAS summary statistics of genetic variants for trait 2. 
 The input data frame should include following columns: SNP, SNP ID; A1, effect allele; A2, reference allele;
-N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS.}
+N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS. If the GWAS is based on logistic regression, `b` should be the logarithm of OR (odds ratio) and `se` is the standard error of log(OR). Notice: SNPs with missing N will be removed.}
 
 \item{LD.path}{Path to the directory where linkage disequilibrium (LD) information is stored.}
 
@@ -30,7 +31,15 @@ Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For 
 and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used.}
 
 \item{jackknife.df}{Logical, FALSE by default. Should the block-jackknife estimates be returned?}
+
+\item{intercept.output}{Logical, FALSE by default. Should the intercept terms be included in estimates.df?}
+
+\item{fill.missing.N}{If NULL (default), the SNPs with missing N are removed. One of "median", "min" or "max" can be given so that the missing N will be filled accordingly. For example, "median" means the missing N are filled with the median N of the SNPs with available N.}
+
 }
+
+
+
 \value{
 A list is returned with:
 \itemize{

@@ -65,7 +65,7 @@
 
 HDL.rg.parallel <-
   function(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N, gwas2.df$N), output.file = "", numCores = 2, 
-           eigen.cut = "automatic", jackknife.df = FALSE){
+           eigen.cut = "automatic", jackknife.df = FALSE, intercept.output = FALSE, fill.missing.N = NULL){
     
     if(!require("doSNOW",character.only = TRUE)){
       stop("Pacakge doSNOW was not found. Please install it firstly.")
@@ -105,9 +105,9 @@ HDL.rg.parallel <-
     
     LD.files <- list.files(LD.path)
     
-    if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
-      snp_counter_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_counter.*")]
-      snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
+    if(any(grepl(x = LD.files, pattern = ".*_snp_counter.*"))){
+      snp_counter_file <- LD.files[grep(x = LD.files, pattern = ".*_snp_counter.*")]
+      snp_list_file <- LD.files[grep(x = LD.files, pattern = ".*_snp_list.*")]
       load(file=paste(LD.path, snp_counter_file, sep = "/"))
       load(file=paste(LD.path, snp_list_file, sep = "/"))
       if("nsnps.list.imputed" %in% ls()){
@@ -133,9 +133,17 @@ HDL.rg.parallel <-
     
     if(!("Z" %in% colnames(gwas1.df))){
       if(("b" %in% colnames(gwas1.df)) && ("se" %in% colnames(gwas1.df))){
-        gwas1.df$Z <- gwas1.df$b / gwas1.df$se
+        if(abs(median(gwas1.df$b) - 1) < 0.1){
+          cat("Taking log(b) in GWAS 1 because b is likely to be OR in stead of log(OR). \n")
+          if(output.file != ""){
+            cat("Taking log(b) in GWAS 1 because b is likely to be OR in stead of log(OR). \n", file = output.file, append = T)
+          }
+          gwas1.df$Z <- log(gwas1.df$b) / gwas1.df$se
+        } else{
+          gwas1.df$Z <- gwas1.df$b / gwas1.df$se
+        }
       } else{
-        error.message <- "Z is not available, meanwhile either b or se is missing. Please check."
+        error.message <- "Z is not available in GWAS 1, meanwhile either b or se is missing. Please check."
         if(output.file != ""){
           cat(error.message, file = output.file, append = T)
         }
@@ -146,9 +154,17 @@ HDL.rg.parallel <-
     
     if(!("Z" %in% colnames(gwas2.df))){
       if(("b" %in% colnames(gwas2.df)) && ("se" %in% colnames(gwas2.df))){
-        gwas2.df$Z <- gwas2.df$b / gwas2.df$se
+        if(abs(median(gwas2.df$b) - 1) < 0.1){
+          cat("Taking log(b) in GWAS 2 because b is likely to be OR in stead of log(OR). \n")
+          if(output.file != ""){
+            cat("Taking log(b) in GWAS 2 because b is likely to be OR in stead of log(OR). \n", file = output.file, append = T)
+          }
+          gwas2.df$Z <- log(gwas2.df$b) / gwas2.df$se
+        } else{
+          gwas2.df$Z <- gwas2.df$b / gwas2.df$se
+        }
       } else{
-        error.message <- "Z is not available, meanwhile either b or se is missing. Please check."
+        error.message <- "Z is not available in GWAS 2, meanwhile either b or se is missing. Please check."
         if(output.file != ""){
           cat(error.message, file = output.file, append = T)
         }
@@ -157,14 +173,42 @@ HDL.rg.parallel <-
       }
     }
     
-    gwas1.df <- gwas1.df %>% filter(!is.na(Z), !is.na(N))
-    gwas2.df <- gwas2.df %>% filter(!is.na(Z), !is.na(N))
+    k1.0 <- length(unique(gwas1.df$SNP))
+    k2.0 <- length(unique(gwas2.df$SNP))
     
+    if(is.null(fill.missing.N)){
+      gwas1.df <- gwas1.df %>% filter(!is.na(Z), !is.na(N))
+      gwas2.df <- gwas2.df %>% filter(!is.na(Z), !is.na(N))
+    } else if(fill.missing.N == "min"){
+      gwas1.df <- gwas1.df %>% filter(!is.na(Z))
+      gwas1.df$N[is.na(gwas1.df$N)] <- min(gwas1.df$N, na.rm = T)
+      
+      gwas2.df <- gwas2.df %>% filter(!is.na(Z))
+      gwas2.df$N[is.na(gwas2.df$N)] <- min(gwas2.df$N, na.rm = T)
+    } else if(fill.missing.N == "max"){
+      gwas1.df <- gwas1.df %>% filter(!is.na(Z))
+      gwas1.df$N[is.na(gwas1.df$N)] <- max(gwas1.df$N, na.rm = T)
+      
+      gwas2.df <- gwas2.df %>% filter(!is.na(Z))
+      gwas2.df$N[is.na(gwas2.df$N)] <- max(gwas2.df$N, na.rm = T)
+    } else if(fill.missing.N == "median"){
+      gwas1.df <- gwas1.df %>% filter(!is.na(Z))
+      gwas1.df$N[is.na(gwas1.df$N)] <- median(gwas1.df$N, na.rm = T)
+      
+      gwas2.df <- gwas2.df %>% filter(!is.na(Z))
+      gwas2.df$N[is.na(gwas2.df$N)] <- median(gwas2.df$N, na.rm = T)
+    } else{
+      error.message <- "If given, the argument fill.missing.N can only be one of below: 'min', 'max', 'median'."
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
+    }
     
-    k1 <- nrow(gwas1.df)
-    k2 <- nrow(gwas2.df)
+    k1 <- length(unique(gwas1.df$SNP))
+    k2 <- length(unique(gwas2.df$SNP))
     k1.percent <- paste("(",round(100*k1 / length(snps.name.list), 2), "%)", sep="") 
-    k2.percent <- paste("(",round(100*k2 / length(snps.name.list), 2), "%)", sep="") 
+    k2.percent <- paste("(",round(100*k2 / length(snps.name.list), 2), "%)", sep="")
     
     cat(k1, "out of", length(snps.name.list), k1.percent, "SNPs in reference panel are available in GWAS 1."," \n")
     cat(k2, "out of", length(snps.name.list), k2.percent, "SNPs in reference panel are available in GWAS 2."," \n")
@@ -228,14 +272,45 @@ HDL.rg.parallel <-
       A2.ref <- snps.ref.df$A2
       names(A2.ref) <- snps.ref
       
-      gwas1.df.subset <- gwas1.df %>% filter(SNP %in% snps.ref)
+      gwas1.df.subset <- gwas1.df %>% filter(SNP %in% snps.ref) %>% distinct(SNP, A1, A2, .keep_all = TRUE)
+      
+      ## Check if there are multiallelic or duplicated SNPs
+      if(any(duplicated(gwas1.df.subset$SNP)) == TRUE){
+        gwas1.df.subset.duplicated <- gwas1.df.subset %>% 
+          mutate(row.num = 1:n()) %>% 
+          filter(SNP == SNP[duplicated(SNP)]) %>%
+          mutate(SNP_A1_A2 = paste(SNP, A1, A2, sep = "_"))
+        snps.ref.df.duplicated <- snps.ref.df %>%
+          filter(id %in% gwas1.df.subset.duplicated$SNP)
+        SNP_A1_A2.valid <- c(paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A1, snps.ref.df.duplicated$A2, sep = "_"),
+                             paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A2, snps.ref.df.duplicated$A1, sep = "_"))
+        row.remove <- gwas1.df.subset.duplicated %>% filter(!(SNP_A1_A2 %in% SNP_A1_A2.valid)) %>% select(row.num) %>% unlist()
+        gwas1.df.subset <- gwas1.df.subset[-row.remove,]
+      }
+      
       bhat1.raw <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])
       A2.gwas1 <- gwas1.df.subset[, "A2"]
       names(bhat1.raw) <- names(A2.gwas1) <- gwas1.df.subset$SNP
       idx.sign1 <- A2.gwas1 == A2.ref[names(A2.gwas1)]
       bhat1.raw <- bhat1.raw*(2*as.numeric(idx.sign1)-1)
       
-      gwas2.df.subset <- gwas2.df %>% filter(SNP %in% snps.ref)
+      
+      
+      gwas2.df.subset <- gwas2.df %>% filter(SNP %in% snps.ref) %>% distinct(SNP, A1, A2, .keep_all = TRUE)
+      
+      ## Check if there are multiallelic or duplicated SNPs
+      if(any(duplicated(gwas2.df.subset$SNP)) == TRUE){
+        gwas2.df.subset.duplicated <- gwas2.df.subset %>% 
+          mutate(row.num = 1:n()) %>% 
+          filter(SNP == SNP[duplicated(SNP)]) %>%
+          mutate(SNP_A1_A2 = paste(SNP, A1, A2, sep = "_"))
+        snps.ref.df.duplicated <- snps.ref.df %>%
+          filter(id %in% gwas2.df.subset.duplicated$SNP)
+        SNP_A1_A2.valid <- c(paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A1, snps.ref.df.duplicated$A2, sep = "_"),
+                             paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A2, snps.ref.df.duplicated$A1, sep = "_"))
+        row.remove <- gwas2.df.subset.duplicated %>% filter(!(SNP_A1_A2 %in% SNP_A1_A2.valid)) %>% select(row.num) %>% unlist()
+        gwas2.df.subset <- gwas2.df.subset[-row.remove,]
+      }
       bhat2.raw <- gwas2.df.subset[, "Z"] / sqrt(gwas2.df.subset[, "N"])
       A2.gwas2 <- gwas2.df.subset[, "A2"]
       names(bhat2.raw) <- names(A2.gwas2) <- gwas2.df.subset$SNP
@@ -520,6 +595,12 @@ HDL.rg.parallel <-
     h12 <- h12.hdl.use[1]
     rg <- h12.hdl.use[1]/sqrt(h11.hdl.use[1]*h22.hdl.use[1])
     
+    if(intercept.output == T){
+      h11.intercept <- h11.hdl.use[2]
+      h12.intercept <- h22.hdl.use[2]
+      h22.intercept <- h12.hdl.use[2]
+    }
+    
     output <- function(value){
       if(is.na(value)){
         value.out <- NA
@@ -580,6 +661,11 @@ HDL.rg.parallel <-
       h12.hdl.jackknife = opt$par
       c(h11.hdl.jackknife[1], h22.hdl.jackknife[1], h12.hdl.jackknife[1],
         h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1]))
+      if(intercept.output == T){
+        c(h11.hdl.jackknife[1], h22.hdl.jackknife[1], h12.hdl.jackknife[1],
+          h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1]),
+          h11.intercept.jackknife[2], h12.intercept.jackknife[2], h22.intercept.jackknife[2])
+      }
       
     }
     close(pb)
@@ -601,6 +687,22 @@ HDL.rg.parallel <-
                            nrow=4,ncol=2)
     rownames(estimates.df) <- c("Heritability_1", "Heritability_2", "Genetic_Covariance", "Genetic_Correlation")
     colnames(estimates.df) <- c("Estimate", "se")
+    
+    if(intercept.output == TRUE){
+      h11.intercept.jackknife[i] <- unlist(lapply(HDL.res.jackknife.list, FUN = "[[", 5))
+      h12.intercept.jackknife[i] <- unlist(lapply(HDL.res.jackknife.list, FUN = "[[", 6))
+      h22.intercept.jackknife[i] <- unlist(lapply(HDL.res.jackknife.list, FUN = "[[", 7))
+      
+      h11.intercept.se <-  sqrt(mean((h11.intercept.jackknife - mean(h11.intercept.jackknife))^2)*(length(h11.intercept.jackknife) - 1))
+      h12.intercept.se <-  sqrt(mean((h12.intercept.jackknife - mean(h12.intercept.jackknife))^2)*(length(h12.intercept.jackknife) - 1))
+      h22.intercept.se <-  sqrt(mean((h22.intercept.jackknife - mean(h22.intercept.jackknife))^2)*(length(h22.intercept.jackknife) - 1))
+      estimates.df <- matrix(c(h11,h22,h12,rg, h11.intercept, h12.intercept, h22.intercept,
+                               h11.se,h22.se,h12.se,rg.se, h11.intercept.se, h12.intercept.se, h22.intercept.se),
+                             nrow=7,ncol=2)
+      rownames(estimates.df) <- c("Heritability_1", "Heritability_2", "Genetic_Covariance", "Genetic_Correlation", 
+                                  "Heritability_1_intercept", "Heritability_2_intercept", "Genetic_Covariance_intercept")
+      colnames(estimates.df) <- c("Estimate", "se")
+    }
     
     
     if(is.na(P)){

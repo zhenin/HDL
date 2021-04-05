@@ -52,7 +52,7 @@
 #' 
 
 HDL.h2 <-
-  function(gwas.df, LD.path, Nref = 335265, output.file = "", eigen.cut = "automatic"){
+  function(gwas.df, LD.path, Nref = 335265, output.file = "", eigen.cut = "automatic", intercept.output = FALSE, fill.missing.N = NULL){
     if(output.file != ""){
       if(file.exists(output.file) == T){
         system(paste0("rm ",output.file))
@@ -87,9 +87,9 @@ HDL.h2 <-
     
     LD.files <- list.files(LD.path)
     
-    if(any(grepl(x = LD.files, pattern = "UKB_snp_counter.*"))){
-      snp_counter_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_counter.*")]
-      snp_list_file <- LD.files[grep(x = LD.files, pattern = "UKB_snp_list.*")]
+    if(any(grepl(x = LD.files, pattern = ".*_snp_counter.*"))){
+      snp_counter_file <- LD.files[grep(x = LD.files, pattern = ".*_snp_counter.*")]
+      snp_list_file <- LD.files[grep(x = LD.files, pattern = ".*_snp_list.*")]
       load(file=paste(LD.path, snp_counter_file, sep = "/"))
       load(file=paste(LD.path, snp_list_file, sep = "/"))
       if("nsnps.list.imputed" %in% ls()){
@@ -111,11 +111,20 @@ HDL.h2 <-
     
     
     
+    
     if(!("Z" %in% colnames(gwas.df))){
       if(("b" %in% colnames(gwas.df)) && ("se" %in% colnames(gwas.df))){
-        gwas.df$Z <- gwas.df$b / gwas.df$se
+        if(abs(median(gwas.df$b) - 1) < 0.1){
+          cat("Taking log(b) in GWAS 1 because b is likely to be OR in stead of log(OR). \n")
+          if(output.file != ""){
+            cat("Taking log(b) in GWAS 1 because b is likely to be OR in stead of log(OR). \n", file = output.file, append = T)
+          }
+          gwas.df$Z <- log(gwas.df$b) / gwas.df$se
+        } else{
+          gwas.df$Z <- gwas.df$b / gwas.df$se
+        }
       } else{
-        error.message <- "Z is not available, meanwhile either b or se is missing. Please check."
+        error.message <- "Z is not available in GWAS 1, meanwhile either b or se is missing. Please check."
         if(output.file != ""){
           cat(error.message, file = output.file, append = T)
         }
@@ -124,10 +133,29 @@ HDL.h2 <-
       }
     }
     
+    k1.0 <- length(unique(gwas.df$SNP))
     
-    gwas.df <- gwas.df %>% filter(!is.na(Z), !is.na(N))
+    if(is.null(fill.missing.N)){
+      gwas.df <- gwas.df %>% filter(!is.na(Z), !is.na(N))
+      
+    } else if(fill.missing.N == "min"){
+      gwas.df <- gwas.df %>% filter(!is.na(Z))
+      gwas.df$N[is.na(gwas.df$N)] <- min(gwas.df$N, na.rm = T)
+    } else if(fill.missing.N == "max"){
+      gwas.df <- gwas.df %>% filter(!is.na(Z))
+      gwas.df$N[is.na(gwas.df$N)] <- max(gwas.df$N, na.rm = T)
+    } else if(fill.missing.N == "median"){
+      gwas.df <- gwas.df %>% filter(!is.na(Z))
+      gwas.df$N[is.na(gwas.df$N)] <- median(gwas.df$N, na.rm = T)
+    } else{
+      error.message <- "If given, the argument fill.missing.N can only be one of below: 'min', 'max', 'median'."
+      if(output.file != ""){
+        cat(error.message, file = output.file, append = T)
+      }
+      stop(error.message)
+    }
     
-    k1 <- nrow(gwas.df)
+    k1 <- length(unique(gwas.df$SNP))
     k1.percent <- paste("(",round(100*k1 / length(snps.name.list), 2), "%)", sep="") 
     
     cat(k1, "out of", length(snps.name.list), k1.percent, "SNPs in reference panel are available in the GWAS."," \n")
@@ -170,12 +198,28 @@ HDL.h2 <-
         A2.ref <- snps.ref.df$A2
         names(A2.ref) <- snps.ref
         
-        gwas.df.subset <- gwas.df %>% filter(SNP %in% snps.ref)
-        bhat1.raw <- gwas.df.subset[, "Z"] / sqrt(gwas.df.subset[, "N"])
-        A2.gwas1 <- gwas.df.subset[, "A2"]
-        names(bhat1.raw) <- names(A2.gwas1) <- gwas.df.subset$SNP
+        gwas1.df.subset <- gwas.df %>% filter(SNP %in% snps.ref) %>% distinct(SNP, A1, A2, .keep_all = TRUE)
+        
+        ## Check if there are multiallelic or duplicated SNPs
+        if(any(duplicated(gwas1.df.subset$SNP)) == TRUE){
+          gwas1.df.subset.duplicated <- gwas1.df.subset %>% 
+            mutate(row.num = 1:n()) %>% 
+            filter(SNP == SNP[duplicated(SNP)]) %>%
+            mutate(SNP_A1_A2 = paste(SNP, A1, A2, sep = "_"))
+          snps.ref.df.duplicated <- snps.ref.df %>%
+            filter(id %in% gwas1.df.subset.duplicated$SNP)
+          SNP_A1_A2.valid <- c(paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A1, snps.ref.df.duplicated$A2, sep = "_"),
+                               paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A2, snps.ref.df.duplicated$A1, sep = "_"))
+          row.remove <- gwas1.df.subset.duplicated %>% filter(!(SNP_A1_A2 %in% SNP_A1_A2.valid)) %>% select(row.num) %>% unlist()
+          gwas1.df.subset <- gwas1.df.subset[-row.remove,]
+        }
+        
+        bhat1.raw <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])
+        A2.gwas1 <- gwas1.df.subset[, "A2"]
+        names(bhat1.raw) <- names(A2.gwas1) <- gwas1.df.subset$SNP
         idx.sign1 <- A2.gwas1 == A2.ref[names(A2.gwas1)]
         bhat1.raw <- bhat1.raw*(2*as.numeric(idx.sign1)-1)
+        
         
         
         M <- length(LDsc)
@@ -366,6 +410,10 @@ HDL.h2 <-
     
     h11 <- h11.hdl.use[1]
     
+    if(intercept.output == T){
+      h11.intercept <- h11.hdl.use[2]
+    }
+    
     output <- function(value){
       if(is.na(value)){
         value.out <- NA
@@ -398,12 +446,19 @@ HDL.h2 <-
     counter <- 0
     message <- ""
     rg.jackknife <- h11.jackknife <- length(lam.v)
+    if(intercept.output == T){
+      h11.intercept.jackknife <- numeric(length(lam.v))
+    }
     for(i in 1:length(lam.v)){
       opt = optim(h11.hdl.use, llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
                   lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.jackknife = opt$par
       
       h11.jackknife[i] <- h11.hdl.jackknife[1]
+      
+      if(intercept.output == T){
+        h11.intercept.jackknife[i] <- h11.hdl.jackknife[2]
+      }
       
       ## Report progress ##
       
@@ -415,6 +470,10 @@ HDL.h2 <-
       cat(backspaces, message, sep = "")
     }
     h11.se <-  sqrt(mean((h11.jackknife - mean(h11.jackknife))^2)*(length(h11.jackknife) - 1))
+    
+    if(intercept.output == TRUE){
+      h11.intercept.se <-  sqrt(mean((h11.intercept.jackknife - mean(h11.intercept.jackknife))^2)*(length(h11.intercept.jackknife) - 1))
+    }
     P <- pchisq((h11/h11.se)^2, df = 1, lower.tail = FALSE)
     
     if(is.na(P)){
@@ -459,7 +518,9 @@ HDL.h2 <-
       cat("\n")
       cat("The results were saved to", output.file, file = output.file, append = TRUE)
       cat("\n", file = output.file, append = TRUE)
-      }
-    
-    return(list(h2 = h11, h2.se = h11.se, P = P, eigen.use = eigen.use))
     }
+    if(intercept.output == TRUE){
+      return(list(h2 = h11, h2.se = h11.se, h11.intercept.se = h11.intercept.se, P = P, eigen.use = eigen.use))
+    }
+    return(list(h2 = h11, h2.se = h11.se, P = P, eigen.use = eigen.use))
+  }
