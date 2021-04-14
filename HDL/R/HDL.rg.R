@@ -106,6 +106,7 @@ HDL.rg <-
         snps.name.list <- snps.list.imputed.vector
         nsnps.list <- nsnps.list.imputed
       }
+      if(is.null(names(nsnps.list))) names(nsnps.list) <- as.character(1:length(nsnps.list))
     } else{
       error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
       if(output.file != ""){
@@ -249,7 +250,7 @@ HDL.rg <-
     counter <- 0
     message <- ""
     num.pieces <- length(unlist(nsnps.list))
-    for(chr in 1:22){
+    for(chr in names(nsnps.list)){
       k <- length(nsnps.list[[chr]])
       for(piece in 1:k){
         
