@@ -81,6 +81,7 @@ if(any(grepl(x = LD.files, pattern = ".*_snp_counter.*"))){
     snps.name.list <- snps.list.imputed.vector
     nsnps.list <- nsnps.list.imputed
   }
+  if(is.null(names(nsnps.list))) names(nsnps.list) <- as.character(1:length(nsnps.list))
 } else{
   error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
   if(output.file != ""){

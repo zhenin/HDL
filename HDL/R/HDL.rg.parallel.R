@@ -114,6 +114,7 @@ HDL.rg.parallel <-
         snps.name.list <- snps.list.imputed.vector
         nsnps.list <- nsnps.list.imputed
       }
+      if(is.null(names(nsnps.list))) names(nsnps.list) <- as.character(1:length(nsnps.list))
     } else{
       error.message <- "It seems this directory does not contain all files needed for HDL. Please check your LD.path again. The current version of HDL only support pre-computed LD reference panels."
       if(output.file != ""){
@@ -247,7 +248,7 @@ HDL.rg.parallel <-
     # counter <- 0
     # message <- ""
     num.pieces <- length(unlist(nsnps.list))
-    info.pieces.df <- data.frame(chr = rep.int(1:22, 
+    info.pieces.df <- data.frame(chr = rep.int(names(nsnps.list), 
                                                unlist(lapply(nsnps.list, length))),
                                  piece = unlist(lapply(X = unlist(lapply(nsnps.list, length)), seq.int, from=1)))
     
