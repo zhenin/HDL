@@ -1,3 +1,9 @@
+HDL has been updated to v1.4.0 (2021-04-15)
+------------
+
+* Add LD reference building pipline.
+* Adjust code of loading LD reference for the compatibility of customized LD reference.
+
 HDL has been updated to v1.3.10 (2020-04-05)
 ------------
 * A new optional argument `fill.missing.N` is added in both the R version and the command line version. If NULL (default), the SNPs with missing N are removed. One of "median", "min" or "max" can be given so that the missing N will be filled accordingly. For example, "median" means the missing N are filled with the median N of the SNPs with available N.
