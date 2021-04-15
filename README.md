@@ -1,7 +1,7 @@
 HDL has been updated to v1.4.0 (2021-04-15)
 ------------
 
-* Add LD reference building pipline.
+* Add LD reference building pipline. Please see [Build a reference panel](Build-a-reference-panel) for more information.
 * Adjust code of loading LD reference for the compatibility of customized LD reference.
 
 HDL has been updated to v1.3.10 (2020-04-05)
