@@ -60,7 +60,7 @@ Rscript build_ld_ref/1_split_chroms.R <ld_ref_path/ld_ref_name> <ALL_SNPS.bim> -
 Prepare plink data: `bfile.bed + bfile.bim + bfile.fam`.
 
 ```bash
-bash build_ld_ref/1_cal_ld.sh <path/to/bfile> <ld_ref_path/ld_ref_name> [bandwidth [ld_window [chroms]]] | bash
+bash build_ld_ref/2_cal_ld.sh <path/to/bfile> <ld_ref_path/ld_ref_name> [bandwidth [ld_window [chroms]]] | bash
 ```
 
 Optional arguments:
@@ -71,19 +71,19 @@ Optional arguments:
 * Or run parallely using `parallel` command
 
 ```bash
-bash build_ld_ref/1_cal_ld.sh <path/to/bfile> <ld_ref_path/ld_ref_name> | parallel -j n_cores
+bash build_ld_ref/2_cal_ld.sh <path/to/bfile> <ld_ref_path/ld_ref_name> | parallel -j n_cores
 ```
 
 * Or run parallely by saving commands to a file, then spliting & submiting it to your server cluster **accordingly**
 
 ```bash
-bash build_ld_ref/1_cal_ld.sh <path/to/bfile> <ld_ref_path/ld_ref_name> > jobs.sh
+bash build_ld_ref/2_cal_ld.sh <path/to/bfile> <ld_ref_path/ld_ref_name> > jobs.sh
 ```
 
 ## 3. Build LD reference
 
 ```bash
-bash build_ld_ref/2_build_ld_ref.sh <ld_ref_path/ld_ref_name> | bash
+bash build_ld_ref/3_build_ld_ref.sh <ld_ref_path/ld_ref_name> | bash
 ```
 
 Or run parallelly as **Step 2**.
