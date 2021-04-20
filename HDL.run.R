@@ -19,21 +19,12 @@ intercept.output <- gsub(x = args[grep(x = args, pattern = "intercept.output=")]
 
 
 ## default arguments
-if(length(Nref)==0)
-  Nref <- 335265
+Nref <- ifelse(length(Nref)==0, 335265, as.numeric(Nref))
+eigen.cut <- ifelse(length(eigen.cut)==0, "automatic", as.numeric(eigen.cut))
+jackknife.df <- ifelse(length(jackknife.df)==0, FALSE, as.logical(jackknife.df))
+if(!any(fill.missing.N==c("median", "min", "max"))) fill.missing.N <- NULL
+output.file <- ifelse(length(output.file)==0, "", output.file)
 
-if(length(eigen.cut)==0)
-  eigen.cut <- "automatic"
-
-if(length(jackknife.df)==0)
-  jackknife.df <- FALSE
-
-if(length(fill.missing.N)==0)
-  fill.missing.N <- NULL
-
-if(length(output.file) == 0){
-  length(output.file) <- ""
-}
 
 if(output.file != ""){
   if(file.exists(output.file) == T){

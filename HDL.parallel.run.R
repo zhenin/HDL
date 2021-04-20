@@ -27,9 +27,7 @@ jackknife.df <- gsub(x = args[grep(x = args, pattern = "jackknife.df=")], patter
 
 
 
-if(length(output.file) == 0){
-  length(output.file) <- ""
-}
+output.file <- ifelse(length(output.file)==0, "", output.file)
 
 if(output.file != ""){
   if(file.exists(output.file) == T){
@@ -80,15 +78,10 @@ if(output.file != ""){
 cat(message)
 gwas2.df <- smart.reader(gwas2.df.path)
 
-if(length(Nref)==0)
-  Nref <- 335265
-if(length(N0) == 0)
-  N0 <- min(gwas1.df$N, gwas2.df$N)
-if(length(eigen.cut)==0)
-  eigen.cut <- "automatic"
-if(length(jackknife.df)==0)
-  jackknife.df <- FALSE
-
+Nref <- ifelse(length(Nref)==0, 335265, as.numeric(Nref))
+N0 <- ifelse(length(Nref)==0, min(gwas1.df$N, gwas2.df$N), as.numeric(N0))
+eigen.cut <- ifelse(length(eigen.cut)==0, "automatic", as.numeric(eigen.cut))
+jackknife.df <- ifelse(length(jackknife.df)==0, FALSE, as.logical(jackknife.df))
 
 ##### Run HDL #####
 
