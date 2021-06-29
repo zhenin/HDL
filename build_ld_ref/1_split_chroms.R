@@ -99,13 +99,11 @@ split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, regions=NULL, chro
   m.len <- sum(len) / 50
   min.length <- round(m.len * 0.8)
   max.length <- min(round(m.len * 1.2), 20000)
+  if(min.length > max.length) min.length <- round(max.length * 0.5)
+
   if(m.len < min.l | m.len > max.l){
     msg <- paste0('We recommend max <= 20000 for eigen decomposition efficiency,',
-                  ' and splitting all chromosomes into ~ 50',
-                  ' (average number of SNPs in a segment = ', m.len, ')',
-                  ' segments for the standard error estimation in the HDL.',
-                  ' You may need to set `--min ', min.length, ' --max ', max.length, '`',
-                  ' and re-run the script.')
+                  ' and splitting all chromosomes into ~ 50 segments for the standard error estimation in the HDL.')
     warning(msg)
   }
 
