@@ -36,7 +36,35 @@ optim.length <- function(len, min.length = 5000, max.length = 15000) {
   return(out)
 }
 
-split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, chrom.ord=as.character(c(1:100, 'X', 'Y', 'MT'))){
+drop.region <- function(df, r){
+  region <- rev(strsplit(r, '')[[1]])
+  end <- which(region=='-')[1]
+  start <- which(region==':')[1]
+  cur.chrom <- paste0(region[length(region):(start+1)], collapse='')
+  start <- as.numeric(paste0(region[(start-1):(end+1)], collapse=''))
+  end <- as.numeric(paste0(region[(end-1):1], collapse=''))
+  if(cur.chrom=='' | is.na(cur.chrom) | is.na(start) | is.na(end) | start > end){
+    stop(paste0('Invalid region region format: ', r))
+  }
+  
+  df.sub1 <- filter(df, chrom==cur.chrom, pos<start)
+  df.sub2 <- filter(df, chrom==cur.chrom, pos>end)
+  if(nrow(df.sub1)>0 & nrow(df.sub2) > 0){
+    seg.grp1 <- tail(df.sub1, 1)$seg.grp
+    seg.grp2 <- head(df.sub2, 1)$seg.grp
+    if(seg.grp1 != 0 & seg.grp1 == seg.grp2){
+      max.seg.grp <- max(c(df.sub1$seg.grp, df.sub2$seg.grp)) + 1
+      df.sub2 <- mutate(df.sub2, seg.grp=ifelse(seg.grp==seg.grp2, max.seg.grp, seg.grp))
+    }
+  }
+  
+  df <- df %>%
+    filter(chrom != cur.chrom) %>%
+    rbind(., rbind(df.sub1, df.sub2))
+  return(df)
+}
+
+split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, regions=NULL, chrom.ord=as.character(c(1:100, 'X', 'Y', 'MT'))){
   dup.rsids <- bim %>%
     count(rsid, name='count') %>%
     filter(count>1) %>%
@@ -49,16 +77,20 @@ split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, chrom.ord=as.chara
                   dup.rsids, '\n\n')
     stop(msg)
   }
-  df <- bim %>%
-    mutate(chrom=as.character(chrom)) %>%
-    mutate(seg.grp=case_when(
-      chrom=='6' & pos<25643792 ~ 1,
-      chrom=='6' & pos>33429951 ~ 2,
-      TRUE ~ 0)) %>%
+
+  df <- mutate(bim, chrom=as.character(chrom), seg.grp=1)
+  if(!is.null(regions)){
+    regions <- strsplit(regions, ';')[[1]]
+    for(region in regions){
+      df <- drop.region(df, region)
+    }
+  }
+
+  df <- df %>%
     mutate(chrom=factor(chrom, levels=chrom.ord)) %>%
-    filter(seg.grp > 0 | chrom != '6') %>%
     arrange(chrom, pos) %>%
     add_count(chrom, seg.grp, name='count')
+
   len <- df %>%
     distinct(chrom, seg.grp, count) %>%
     select(count) %>%
@@ -66,17 +98,24 @@ split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, chrom.ord=as.chara
 
   m.len <- sum(len) / 50
   min.length <- round(m.len * 0.8)
-  max.length <- round(m.len * 1.2)
+  max.length <- min(round(m.len * 1.2), 20000)
   if(m.len < min.l | m.len > max.l){
-    msg <- paste0('We recommend split all chromosomes into ~ 50',
+    msg <- paste0('We recommend max <= 20000 for eigen decomposition efficiency,',
+                  ' and splitting all chromosomes into ~ 50',
                   ' (average number of SNPs in a segment = ', m.len, ')',
                   ' segments for the standard error estimation in the HDL.',
                   ' You may need to set `--min ', min.length, ' --max ', max.length, '`',
                   ' and re-run the script.')
     warning(msg)
   }
-  min.length <- max(min.l, min.length)
-  max.length <- max(max.l, max.length)
+
+  if(max.l <= min.length | min.l >= max.length){
+    min.length <- min.l
+    max.length <- max.l
+  }else{
+    min.length <- max(min.l, min.length)
+    max.length <- min(max.l, max.length)
+  }
   
   optim.res <- optim.length(len, min.length, max.length)
   
@@ -119,19 +158,36 @@ split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, chrom.ord=as.chara
   save(snps.name.list, file=paste0(outprefix, '_snp_list_array.RData'))
 }
 
+get.mhc.region <- function(mhc){
+  if(mhc=='keep') return(NULL)
+  mhc <- rev(strsplit(mhc, '')[[1]])
+  end <- which(mhc=='-')[1]
+  start <- which(mhc==':')[1]
+  chrom <- paste0(mhc[length(mhc):(start+1)], collapse='')
+  start <- as.numeric(paste0(mhc[(start-1):(end+1)], collapse=''))
+  end <- as.numeric(paste0(mhc[(end-1):1], collapse=''))
+  if(chrom=='' | is.na(chrom) | is.na(start) | is.na(end) | start > end){
+    stop('Invalid MHC region format.')
+  }
+  return(list(chrom=chrom, start=start, end=end))
+}
+
 args <- arg_parser('Split chromosomes into segments.') %>%
   add_argument('ldprefix', help='ld_ref_path/ld_ref_name', type='character') %>%
   add_argument('bim', help='path to .bim file of ALL chromsomes to be included in your LD reference panel.', type='character') %>%
   add_argument('--min', help='min average number of SNPs in a segment', type='numeric', default=3000) %>%
-  add_argument('--max', help='max average number of SNPs in a segment', type='numeric', default=5000) %>%
+  add_argument('--max', help='max average number of SNPs in a segment', type='numeric', default=20000) %>%
+  add_argument('--exclude', help='exclude chromosome regions: "chromA:startA-endA;chromB:startB-endB", or set as "keep" to avoid excluding', type='character', default='"6:25643792-33429951"') %>%
   parse_args()
 
 ldprefix <- args$ldprefix
 bim.file <- args$bim
 min.l <- args$min
 max.l <- args$max
+regions <- gsub('^"|"$', '', args$exclude)
+if(regions=='keep') regions <- NULL
 
 if(min.l > max.l) stop('value of --min option is greater than value of --max option.')
 
 bim <- fread(bim.file, select=c(1, 2, 4), col.names=c('chrom', 'rsid', 'pos'))
-split.bim(ldprefix, bim, min.l, max.l)
+split.bim(ldprefix, bim, min.l, max.l, regions)
