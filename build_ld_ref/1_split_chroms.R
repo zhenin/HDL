@@ -64,7 +64,8 @@ drop.region <- function(df, r){
   return(df)
 }
 
-split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, regions=NULL, chrom.ord=as.character(c(1:100, 'X', 'Y', 'MT'))){
+split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, regions=NULL,
+                      chrom.ord=as.character(c(1:100, 'X', 'Y', 'MT'))){
   dup.rsids <- bim %>%
     count(rsid, name='count') %>%
     filter(count>1) %>%
@@ -99,11 +100,13 @@ split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, regions=NULL, chro
   m.len <- sum(len) / 50
   min.length <- round(m.len * 0.8)
   max.length <- min(round(m.len * 1.2), 20000)
-  if(min.length > max.length) min.length <- round(max.length * 0.5)
+  if(min.length > max.length) min.length <- round(max.length/1.2*0.8, 0)
 
-  if(m.len < min.l | m.len > max.l){
+  m.len <- (max.length + min.length) / 2
+  
+  if(m.len < min.l | min.l > 20000){
     msg <- paste0('We recommend max <= 20000 for eigen decomposition efficiency,',
-                  ' and splitting all chromosomes into ~ 50 segments for the standard error estimation in the HDL.')
+                  ' and roughly splitting all chromosomes into 50 segments or more for the standard error estimation in the HDL.')
     warning(msg)
   }
 
@@ -156,26 +159,12 @@ split.bim <- function(outprefix, bim, min.l=1000, max.l=3000, regions=NULL, chro
   save(snps.name.list, file=paste0(outprefix, '_snp_list_array.RData'))
 }
 
-get.mhc.region <- function(mhc){
-  if(mhc=='keep') return(NULL)
-  mhc <- rev(strsplit(mhc, '')[[1]])
-  end <- which(mhc=='-')[1]
-  start <- which(mhc==':')[1]
-  chrom <- paste0(mhc[length(mhc):(start+1)], collapse='')
-  start <- as.numeric(paste0(mhc[(start-1):(end+1)], collapse=''))
-  end <- as.numeric(paste0(mhc[(end-1):1], collapse=''))
-  if(chrom=='' | is.na(chrom) | is.na(start) | is.na(end) | start > end){
-    stop('Invalid MHC region format.')
-  }
-  return(list(chrom=chrom, start=start, end=end))
-}
-
 args <- arg_parser('Split chromosomes into segments.') %>%
   add_argument('ldprefix', help='ld_ref_path/ld_ref_name', type='character') %>%
   add_argument('bim', help='path to .bim file of ALL chromsomes to be included in your LD reference panel.', type='character') %>%
   add_argument('--min', help='min average number of SNPs in a segment', type='numeric', default=3000) %>%
   add_argument('--max', help='max average number of SNPs in a segment', type='numeric', default=20000) %>%
-  add_argument('--exclude', help='exclude chromosome regions: "chromA:startA-endA;chromB:startB-endB", or set as "keep" to avoid excluding', type='character', default='"6:25643792-33429951"') %>%
+  add_argument('--exclude', help='exclude chromosome regions separated by `;` and quoted with `"`, e.g. "chromA:startA-endA;chromB:startB-endB;chromC:startC-endC;..."        or set as "keep" to avoid excluding', type='character', default='"6:25643792-33429951"') %>%
   parse_args()
 
 ldprefix <- args$ldprefix
