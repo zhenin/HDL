@@ -44,7 +44,7 @@ drop.region <- function(df, r){
   start <- as.numeric(paste0(region[(start-1):(end+1)], collapse=''))
   end <- as.numeric(paste0(region[(end-1):1], collapse=''))
   if(cur.chrom=='' | is.na(cur.chrom) | is.na(start) | is.na(end) | start > end){
-    stop(paste0('Invalid region region format: ', r))
+    stop(paste0('Invalid chromosome region: ', r))
   }
   
   df.sub1 <- filter(df, chrom==cur.chrom, pos<start)
