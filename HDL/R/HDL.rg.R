@@ -177,7 +177,7 @@ HDL.rg <-
       gwas1.df$N[is.na(gwas1.df$N)] <- min(gwas1.df$N, na.rm = T)
       
       gwas2.df <- gwas2.df %>% filter(!is.na(Z))
-baid      gwas2.df$N[is.na(gwas2.df$N)] <- min(gwas2.df$N, na.rm = T)
+      gwas2.df$N[is.na(gwas2.df$N)] <- min(gwas2.df$N, na.rm = T)
     } else if(fill.missing.N == "max"){
       gwas1.df <- gwas1.df %>% filter(!is.na(Z))
       gwas1.df$N[is.na(gwas1.df$N)] <- max(gwas1.df$N, na.rm = T)
