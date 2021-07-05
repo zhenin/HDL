@@ -177,7 +177,7 @@ HDL.rg <-
       gwas1.df$N[is.na(gwas1.df$N)] <- min(gwas1.df$N, na.rm = T)
       
       gwas2.df <- gwas2.df %>% filter(!is.na(Z))
-      gwas2.df$N[is.na(gwas2.df$N)] <- min(gwas2.df$N, na.rm = T)
+baid      gwas2.df$N[is.na(gwas2.df$N)] <- min(gwas2.df$N, na.rm = T)
     } else if(fill.missing.N == "max"){
       gwas1.df <- gwas1.df %>% filter(!is.na(Z))
       gwas1.df$N[is.na(gwas1.df$N)] <- max(gwas1.df$N, na.rm = T)
@@ -256,8 +256,8 @@ HDL.rg <-
         
         ## reference sample ##
         
-        LD_rda_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, "_.*rda"))]
-        LD_bim_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, "_.*bim"))]
+        LD_rda_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, "[\\._].*rda"))]
+        LD_bim_file <- LD.files[grep(x = LD.files, pattern = paste0("chr",chr,".",piece, "[\\._].*bim"))]
         load(file=paste(LD.path, LD_rda_file, sep = "/"))
         snps.ref.df <- read.table(paste(LD.path, LD_bim_file, sep = "/"))
         
