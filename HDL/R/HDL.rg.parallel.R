@@ -660,12 +660,13 @@ HDL.rg.parallel <-
                   bstar1=unlist(bstar1.v.use[-i]), bstar2=unlist(bstar2.v.use[-i]),
                   lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
       h12.hdl.jackknife = opt$par
-      c(h11.hdl.jackknife[1], h22.hdl.jackknife[1], h12.hdl.jackknife[1],
-        h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1]))
-      if(intercept.output == T){
+      if(intercept.output){
         c(h11.hdl.jackknife[1], h22.hdl.jackknife[1], h12.hdl.jackknife[1],
           h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1]),
           h11.intercept.jackknife[2], h12.intercept.jackknife[2], h22.intercept.jackknife[2])
+      }else{
+        c(h11.hdl.jackknife[1], h22.hdl.jackknife[1], h12.hdl.jackknife[1],
+          h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1]))
       }
       
     }
