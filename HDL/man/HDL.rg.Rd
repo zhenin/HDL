@@ -6,7 +6,7 @@
 \usage{
 HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N,
   gwas2.df$N), output.file = "", eigen.cut = "automatic", jackknife.df = FALSE, 
-  intercept.output = FALSE, fill.missing.N = NULL)
+  intercept.output = FALSE, fill.missing.N = NULL, lim = exp(-18))
 }
 \arguments{
 \item{gwas1.df}{A data frame including GWAS summary statistics of genetic variants for trait 1. 
@@ -35,6 +35,8 @@ and their correspondent eigenvectors. If the default 'automatic' is used, the ei
 \item{intercept.output}{Logical, FALSE by default. Should the intercept terms be included in estimates.df?}
 
 \item{fill.missing.N}{If NULL (default), the SNPs with missing N are removed. One of "median", "min" or "max" can be given so that the missing N will be filled accordingly. For example, "median" means the missing N are filled with the median N of the SNPs with available N.}
+
+\item{lim}{Tolerance limitation, default is exp(-18)}
 
 }
 

@@ -16,6 +16,7 @@
 #' @param eigen.cut Which eigenvalues and eigenvectors in each LD score matrix should be used for HDL. 
 #' Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For example, eigen.cut = 0.99 means using the leading eigenvalues explaining 99% of the variance
 #' and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used. 
+#' @param lim Tolerance limitation, default lim = exp(-18). 
 #' @note Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://github.com/zhenin/HDL/wiki/Reference-panels
 #' These are the LD matrices and their eigen-decomposition from 335,265 genomic British UK Biobank individuals. Two sets of reference panel are provided: 
 #' 1) 307,519 QCed UK Biobank Axiom Array SNPs. The size is about 7.5 GB after unzipping.
@@ -61,7 +62,7 @@
 
 HDL.rg <-
   function(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N, gwas2.df$N), output.file = "", eigen.cut = "automatic", 
-           jackknife.df = FALSE, intercept.output = FALSE, fill.missing.N = NULL){
+           jackknife.df = FALSE, intercept.output = FALSE, fill.missing.N = NULL, lim = exp(-18)){
     
     if(output.file != ""){
       if(file.exists(output.file) == T){
@@ -357,19 +358,19 @@ HDL.rg <-
         bstar2 = crossprod(V,bhat2)  ##
         
         opt = optim(c(h11.wls[2],1), llfun, N=N1, Nref=Nref, lam=lam, bstar=bstar1, M=M,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                    lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
         
         h11.hdl = opt$par
         
         opt = optim(c(h22.wls[2],1), llfun, N=N2, Nref=Nref, lam=lam, bstar=bstar2, M=M,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                    lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
         h22.hdl = opt$par
         
         opt=  optim(c(h12.wls[2],rho12), llfun.gcov.part.2, h11=h11.hdl, h22=h22.hdl, 
                     rho12=rho12, M=M, N1=N1, N2=N2, N0=N0, Nref=Nref, 
                     lam0=lam, lam1=lam, lam2=lam, 
                     bstar1=bstar1, bstar2=bstar2,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+                    lim=lim, method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
         h12.hdl = opt$par
         
         HDL11.df <- rbind(HDL11.df, h11.hdl)
@@ -447,10 +448,10 @@ HDL.rg <-
       bstar2.v.90 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.90)
       
       opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar1.v.90), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.90 = opt$par
       opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar2.v.90), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h22.hdl.90 = opt$par
       
       if(sum(unlist(eigen.num.v.90)) == sum(unlist(eigen.num.v.95))){
@@ -466,10 +467,10 @@ HDL.rg <-
         bstar2.v.95 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.95)
         
         opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.95), bstar=unlist(bstar1.v.95), M=M.ref,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                    lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
         h11.hdl.95 = opt$par
         opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.95), bstar=unlist(bstar2.v.95), M=M.ref,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                    lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
         h22.hdl.95 = opt$par
         
         if(sum(unlist(eigen.num.v.95)) == sum(unlist(eigen.num.v.99))){
@@ -497,10 +498,10 @@ HDL.rg <-
           bstar2.v.99 <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.99)
           
           opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.99), bstar=unlist(bstar1.v.99), M=M.ref,
-                      lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                      lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
           h11.hdl.99 = opt$par
           opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.99), bstar=unlist(bstar2.v.99), M=M.ref,
-                      lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                      lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
           h22.hdl.99 = opt$par
           
           if(h11.hdl.99[1] != 0 &&
@@ -557,10 +558,10 @@ HDL.rg <-
       bstar2.v.cut <- mapply(eigen_select.fun,bstar2.v,eigen.num.v.cut)
       
       opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.cut), bstar=unlist(bstar1.v.cut), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.cut = opt$par
       opt = optim(c(h2_2,1), llfun, N=N2, Nref=Nref, lam=unlist(lam.v.cut), bstar=unlist(bstar2.v.cut), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h22.hdl.cut = opt$par
       
       lam.v.use <- lam.v.cut
@@ -577,7 +578,7 @@ HDL.rg <-
                 rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                 lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
                 bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
-                lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+                lim=lim, method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
     if(opt$convergence != 0){
       starting.value.v <- c(0,-sqrt(h11*h22)*0.5, sqrt(h11*h22)*0.5)
       k <- 1
@@ -587,7 +588,7 @@ HDL.rg <-
                     rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                     lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
                     bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+                    lim=lim, method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
         k <- k + 1
         if(k > length(starting.value.v)){
           error.message <- "Algorithm failed to converge after trying different initial values. \n"
@@ -654,19 +655,19 @@ HDL.rg <-
     }
     for(i in 1:length(lam.v)){
       opt = optim(h11.hdl.use, llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.jackknife = opt$par
       
       
       opt = optim(h22.hdl.use, llfun, N=N2, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar2.v.use[-i]), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h22.hdl.jackknife = opt$par
       
       opt=  optim(h12.hdl.use, llfun.gcov.part.2, h11=h11.hdl.use, h22=h22.hdl.use,
                   rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                   lam0=unlist(lam.v.use[-i]), lam1=unlist(lam.v.use[-i]), lam2=unlist(lam.v.use[-i]),
                   bstar1=unlist(bstar1.v.use[-i]), bstar2=unlist(bstar2.v.use[-i]),
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
       h12.hdl.jackknife = opt$par
       h11.jackknife[i] <- h11.hdl.jackknife[1]
       h12.jackknife[i] <- h12.hdl.jackknife[1]

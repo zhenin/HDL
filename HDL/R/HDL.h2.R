@@ -11,6 +11,7 @@
 #' @param eigen.cut Which eigenvalues and eigenvectors in each LD score matrix should be used for HDL. 
 #' Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For example, eigen.cut = 0.99 means using the leading eigenvalues explaining 99% of the variance
 #' and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used. 
+#' @param lim Tolerance limitation, default lim = exp(-18). 
 #' @note Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://github.com/zhenin/HDL/wiki/Reference-panels
 #' These are the LD matrices and their eigen-decomposition from 335,265 genomic British UK Biobank individuals. Three sets of reference panel are provided: 
 #' 1) 1,029,876 QCed UK Biobank imputed HapMap3 SNPs. The size is about 33 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. 
@@ -52,7 +53,7 @@
 #' 
 
 HDL.h2 <-
-  function(gwas.df, LD.path, Nref = 335265, output.file = "", eigen.cut = "automatic", intercept.output = FALSE, fill.missing.N = NULL){
+  function(gwas.df, LD.path, Nref = 335265, output.file = "", eigen.cut = "automatic", intercept.output = FALSE, fill.missing.N = NULL, lim = exp(-18)){
     if(output.file != ""){
       if(file.exists(output.file) == T){
         system(paste0("rm ",output.file))
@@ -246,7 +247,7 @@ HDL.h2 <-
         bstar1 = crossprod(V,bhat1)  ## 
         
         opt = optim(c(h11.wls[2],1), llfun, N=N1, Nref=Nref, lam=lam, bstar=bstar1, M=M,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                    lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
         
         h11.hdl = opt$par
         
@@ -319,7 +320,7 @@ HDL.h2 <-
       bstar1.v.90 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.90)
       
       opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.90), bstar=unlist(bstar1.v.90), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.90 = opt$par
       
       if(sum(unlist(eigen.num.v.90)) == sum(unlist(eigen.num.v.95))){
@@ -332,7 +333,7 @@ HDL.h2 <-
         bstar1.v.95 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.95)
         
         opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.95), bstar=unlist(bstar1.v.95), M=M.ref,
-                    lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                    lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
         h11.hdl.95 = opt$par
         
         if(sum(unlist(eigen.num.v.95)) == sum(unlist(eigen.num.v.99))){
@@ -353,7 +354,7 @@ HDL.h2 <-
           bstar1.v.99 <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.99)
           
           opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.99), bstar=unlist(bstar1.v.99), M=M.ref,
-                      lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                      lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
           h11.hdl.99 = opt$par
           
           if(h11.hdl.99[1] != 0 &&
@@ -399,7 +400,7 @@ HDL.h2 <-
       bstar1.v.cut <- mapply(eigen_select.fun,bstar1.v,eigen.num.v.cut)
       
       opt = optim(c(h1_2,1), llfun, N=N1, Nref=Nref, lam=unlist(lam.v.cut), bstar=unlist(bstar1.v.cut), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.cut = opt$par
       
       
@@ -452,7 +453,7 @@ HDL.h2 <-
     }
     for(i in 1:length(lam.v)){
       opt = optim(h11.hdl.use, llfun, N=N1, Nref=Nref, lam=unlist(lam.v.use[-i]), bstar=unlist(bstar1.v.use[-i]), M=M.ref,
-                  lim=exp(-18), method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
+                  lim=lim, method ='L-BFGS-B', lower=c(0,0), upper=c(1,10))
       h11.hdl.jackknife = opt$par
       
       h11.jackknife[i] <- h11.hdl.jackknife[1]
