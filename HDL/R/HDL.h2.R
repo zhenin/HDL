@@ -522,7 +522,7 @@ HDL.h2 <-
       cat("\n", file = output.file, append = TRUE)
     }
     if(intercept.output == TRUE){
-      return(list(h2 = h11, h2.se = h11.se, h11.intercept.se = h11.intercept.se, P = P, eigen.use = eigen.use))
+      return(list(h2 = h11, h2.se = h11.se, intercept = h11.intercept, intercept.se = h11.intercept.se, P = P, eigen.use = eigen.use))
     }
     return(list(h2 = h11, h2.se = h11.se, P = P, eigen.use = eigen.use))
   }
