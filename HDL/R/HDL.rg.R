@@ -675,9 +675,9 @@ HDL.rg <-
       rg.jackknife[i] <- h12.hdl.jackknife[1]/sqrt(h11.hdl.jackknife[1]*h22.hdl.jackknife[1])
       
       if(intercept.output == T){
-        h11.intercept.jackknife <- h11.hdl.jackknife[2]
-        h12.intercept.jackknife <- h12.hdl.jackknife[2]
-        h22.intercept.jackknife <- h22.hdl.jackknife[2]
+        h11.intercept.jackknife[i] <- h11.hdl.jackknife[2]
+        h12.intercept.jackknife[i] <- h12.hdl.jackknife[2]
+        h22.intercept.jackknife[i] <- h22.hdl.jackknife[2]
       }
       
       ## Report progress ##
