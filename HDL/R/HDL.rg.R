@@ -605,8 +605,8 @@ HDL.rg <-
     
     if(intercept.output == T){
       h11.intercept <- h11.hdl.use[2]
-      h12.intercept <- h22.hdl.use[2]
-      h22.intercept <- h12.hdl.use[2]
+      h22.intercept <- h22.hdl.use[2]
+      h12.intercept <- h12.hdl.use[2]
     }
     
     output <- function(value){
