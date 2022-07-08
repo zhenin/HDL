@@ -706,8 +706,8 @@ HDL.rg <-
       h11.intercept.se <-  sqrt(mean((h11.intercept.jackknife - mean(h11.intercept.jackknife))^2)*(length(h11.intercept.jackknife) - 1))
       h12.intercept.se <-  sqrt(mean((h12.intercept.jackknife - mean(h12.intercept.jackknife))^2)*(length(h12.intercept.jackknife) - 1))
       h22.intercept.se <-  sqrt(mean((h22.intercept.jackknife - mean(h22.intercept.jackknife))^2)*(length(h22.intercept.jackknife) - 1))
-      estimates.df <- matrix(c(h11,h22,h12,rg, h11.intercept, h12.intercept, h22.intercept,
-                               h11.se,h22.se,h12.se,rg.se, h11.intercept.se, h12.intercept.se, h22.intercept.se),
+      estimates.df <- matrix(c(h11,h22,h12,rg, h11.intercept, h22.intercept, h12.intercept,
+                               h11.se,h22.se,h12.se,rg.se, h11.intercept.se, h22.intercept.se, h12.intercept.se),
                              nrow=7,ncol=2)
       rownames(estimates.df) <- c("Heritability_1", "Heritability_2", "Genetic_Covariance", "Genetic_Correlation", 
                                   "Heritability_1_intercept", "Heritability_2_intercept", "Genetic_Covariance_intercept")
