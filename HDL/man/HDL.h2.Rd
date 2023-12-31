@@ -4,9 +4,16 @@
 \alias{HDL.h2}
 \title{High-definition likelihood inference of SNP-based heritabiity (HDL)}
 \usage{
-HDL.h2(gwas.df, LD.path, Nref = 335265, output.file = "",
-  eigen.cut = "automatic", 
-  intercept.output = FALSE, fill.missing.N = NULL, lim = exp(-18))
+HDL.h2(
+  gwas.df,
+  LD.path,
+  Nref = 335265,
+  output.file = "",
+  eigen.cut = "automatic",
+  intercept.output = FALSE,
+  fill.missing.N = NULL,
+  lim = exp(-18)
+)
 }
 \arguments{
 \item{gwas.df}{A data frame including GWAS summary statistics of genetic variants for a trait. 
@@ -27,10 +34,8 @@ and their correspondent eigenvectors. If the default 'automatic' is used, the ei
 
 \item{fill.missing.N}{If NULL (default), the SNPs with missing N are removed. One of "median", "min" or "max" can be given so that the missing N will be filled accordingly. For example, "median" means the missing N are filled with the median N of the SNPs with available N.}
 
-\item{lim}{Tolerance limitation, default is exp(-18)}
-
+\item{lim}{Tolerance limitation, default lim = exp(-18).}
 }
-
 \value{
 A list is returned with:
 \itemize{

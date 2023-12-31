@@ -4,9 +4,20 @@
 \alias{HDL.rg}
 \title{High-definition likelihood inference of genetic correlations (HDL)}
 \usage{
-HDL.rg(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N,
-  gwas2.df$N), output.file = "", eigen.cut = "automatic", jackknife.df = FALSE, 
-  intercept.output = FALSE, fill.missing.N = NULL, lim = exp(-18))
+HDL.rg(
+  gwas1.df,
+  gwas2.df,
+  LD.path,
+  Nref = 335265,
+  N0 = min(gwas1.df$N, gwas2.df$N),
+  output.file = "",
+  eigen.cut = "automatic",
+  jackknife.df = FALSE,
+  intercept.output = FALSE,
+  fill.missing.N = NULL,
+  lim = exp(-18),
+  verbose = FALSE
+)
 }
 \arguments{
 \item{gwas1.df}{A data frame including GWAS summary statistics of genetic variants for trait 1. 
@@ -36,12 +47,10 @@ and their correspondent eigenvectors. If the default 'automatic' is used, the ei
 
 \item{fill.missing.N}{If NULL (default), the SNPs with missing N are removed. One of "median", "min" or "max" can be given so that the missing N will be filled accordingly. For example, "median" means the missing N are filled with the median N of the SNPs with available N.}
 
-\item{lim}{Tolerance limitation, default is exp(-18)}
+\item{lim}{Tolerance limitation, default lim = exp(-18).}
 
+\item{verbose}{Logical, FALSE by default. Whether to print the genetic covaraince optimization process on the console.}
 }
-
-
-
 \value{
 A list is returned with:
 \itemize{
@@ -50,7 +59,6 @@ A list is returned with:
 \item{P }{P-value based on Wald test.}
 \item{estimates.df }{A detailed matrix includes the estimates and standard errors of heritabilities, genetic covariance and genetic correlation.}
 \item{eigen.use }{The eigen.cut used in computation.}
-\item{jackknife.df }{Only if argument `jackknife.df` is true. A matrix includes the block-jackknife estimates of heritabilities, genetic covariance and genetic correlation.}
 }
 }
 \description{
@@ -79,7 +87,8 @@ res.HDL
 }
 }
 \references{
-Ning, Z., Pawitan, Y. & Shen, X. High-definition likelihood inference of genetic correlations across human complex traits. Nat Genet (2020).
+Ning Z, Pawitan Y, Shen X (2020). High-definition likelihood inference of genetic correlations 
+across human complex traits. \emph{Accepted by Nature Genetics, waiting for publishing}.
 }
 \seealso{
 HDL tutorial: https://github.com/zhenin/HDL

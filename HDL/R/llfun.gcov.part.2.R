@@ -1,5 +1,5 @@
 llfun.gcov.part.2 = function(param,h11,h22,rho12, M, N1, N2, N0, Nref,
-                             lam0, lam1, lam2, bstar1, bstar2, lim=exp(-10)){
+                             lam0, lam1, lam2, bstar1, bstar2, lim=exp(-10), verbose=FALSE){
   h12 = param[1]
   int = param[2]
   ## sample fractions
@@ -17,5 +17,7 @@ llfun.gcov.part.2 = function(param,h11,h22,rho12, M, N1, N2, N0, Nref,
   lam22.1 = lam22 - lam12^2/lam11
   lam22.1 = ifelse(lam22.1<lim, lim,lam22.1)
   ll = sum(log(lam22.1)) + sum(ustar^2/(lam22.1))
+  if(verbose)
+    cat(sprintf("llfun.gcov: h12=%f, c12=%f, ll=%f\n",h12,int,ll))
   return(ll)
 }

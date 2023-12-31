@@ -4,13 +4,15 @@
 #' 
 #' @param gwas.df A data frame including GWAS summary statistics of genetic variants for a trait. 
 #' The input data frame should include following columns: SNP, SNP ID; A1, effect allele; A2, reference allele;
-#' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS. 
+#' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS. If the GWAS is based on logistic regression, `b` should be the logarithm of OR (odds ratio) and `se` is the standard error of log(OR). Notice: SNPs with missing N will be removed.
 #' @param LD.path Path to the directory where linkage disequilibrium (LD) information is stored.
 #' @param Nref Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 335265
 #' @param output.file Where the log and results should be written. If you do not specify a file, the log will be printed on the console.
 #' @param eigen.cut Which eigenvalues and eigenvectors in each LD score matrix should be used for HDL. 
 #' Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For example, eigen.cut = 0.99 means using the leading eigenvalues explaining 99% of the variance
 #' and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used. 
+#' @param intercept.output Logical, FALSE by default. Should the intercept terms be included in estimates.df?
+#' @param fill.missing.N If NULL (default), the SNPs with missing N are removed. One of "median", "min" or "max" can be given so that the missing N will be filled accordingly. For example, "median" means the missing N are filled with the median N of the SNPs with available N.
 #' @param lim Tolerance limitation, default lim = exp(-18). 
 #' @note Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://github.com/zhenin/HDL/wiki/Reference-panels
 #' These are the LD matrices and their eigen-decomposition from 335,265 genomic British UK Biobank individuals. Three sets of reference panel are provided: 

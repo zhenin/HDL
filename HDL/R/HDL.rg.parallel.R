@@ -5,10 +5,10 @@
 #' 
 #' @param gwas1.df A data frame including GWAS summary statistics of genetic variants for trait 1. 
 #' The input data frame should include following columns: SNP, SNP ID; A1, effect allele; A2, reference allele;
-#' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS. 
+#' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS. If the GWAS is based on logistic regression, `b` should be the logarithm of OR (odds ratio) and `se` is the standard error of log(OR). Notice: SNPs with missing N will be removed.
 #' @param gwas2.df A data frame including GWAS summary statistics of genetic variants for trait 2. 
 #' The input data frame should include following columns: SNP, SNP ID; A1, effect allele; A2, reference allele;
-#' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS.
+#' N, sample size; Z, z-score; If Z is not given, alternatively, you may provide: b, estimate of marginal effect in GWAS; se, standard error of the estimates of marginal effects in GWAS. If the GWAS is based on logistic regression, `b` should be the logarithm of OR (odds ratio) and `se` is the standard error of log(OR). Notice: SNPs with missing N will be removed.
 #' @param LD.path Path to the directory where linkage disequilibrium (LD) information is stored.
 #' @param numCores The number of cores to be used.
 #' @param Nref Sample size of the reference sample where LD is computed. If the default UK Biobank reference sample is used, Nref = 335265.
@@ -18,7 +18,11 @@
 #' @param eigen.cut Which eigenvalues and eigenvectors in each LD score matrix should be used for HDL. 
 #' Users are allowed to specify a numeric value between 0 and 1 for eigen.cut. For example, eigen.cut = 0.99 means using the leading eigenvalues explaining 99% of the variance
 #' and their correspondent eigenvectors. If the default 'automatic' is used, the eigen.cut gives the most stable heritability estimates will be used. 
+#' @param jackknife.df Logical, FALSE by default. Should the block-jackknife estimates be returned?
+#' @param intercept.output Logical, FALSE by default. Should the intercept terms be included in estimates.df?
+#' @param fill.missing.N If NULL (default), the SNPs with missing N are removed. One of "median", "min" or "max" can be given so that the missing N will be filled accordingly. For example, "median" means the missing N are filled with the median N of the SNPs with available N.
 #' @param lim Tolerance limitation, default lim = exp(-18). 
+#' @param verbose Logical, FALSE by default. Whether to print the genetic covaraince optimization process on the console.
 #' @note Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://github.com/zhenin/HDL/wiki/Reference-panels
 #' These are the LD matrices and their eigen-decomposition from 335,265 genomic British UK Biobank individuals. Three sets of reference panel are provided: 
 #' 1) 1,029,876 QCed UK Biobank imputed HapMap3 SNPs. The size is about 33 GB after unzipping. Although it takes more time, using the imputed panel provides more accurate estimates of genetic correlations. 
@@ -66,7 +70,7 @@
 
 HDL.rg.parallel <-
   function(gwas1.df, gwas2.df, LD.path, Nref = 335265, N0 = min(gwas1.df$N, gwas2.df$N), output.file = "", numCores = 2, 
-           eigen.cut = "automatic", jackknife.df = FALSE, intercept.output = FALSE, fill.missing.N = NULL, lim = exp(-18)){
+           eigen.cut = "automatic", jackknife.df = FALSE, intercept.output = FALSE, fill.missing.N = NULL, lim = exp(-18), verbose=FALSE){
     
     if(!require("doSNOW",character.only = TRUE)){
       stop("Pacakge doSNOW was not found. Please install it firstly.")
@@ -572,7 +576,7 @@ HDL.rg.parallel <-
                 rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                 lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
                 bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
-                lim=lim, method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+                lim=lim, verbose=verbose, method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
     if(opt$convergence != 0){
       starting.value.v <- c(0,-sqrt(h11*h22)*0.5, sqrt(h11*h22)*0.5)
       k <- 1
@@ -582,7 +586,7 @@ HDL.rg.parallel <-
                     rho12=rho12, M=M.ref, N1=N1, N2=N2, N0=N0, Nref=Nref,
                     lam0=unlist(lam.v.use), lam1=unlist(lam.v.use), lam2=unlist(lam.v.use),
                     bstar1=unlist(bstar1.v.use), bstar2=unlist(bstar2.v.use),
-                    lim=lim, method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
+                    lim=lim, verbose=verbose, method ='L-BFGS-B', lower=c(-1,-10), upper=c(1,10))
         k <- k + 1
         if(k > length(starting.value.v)){
           error.message <- "Algorithm failed to converge after trying different initial values. \n"
