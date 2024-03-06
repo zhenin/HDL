@@ -136,7 +136,7 @@ HDL.h2 <-
         
       }
     }
-    
+    gwas.df$Z[!is.finite(gwas.df$Z)] <- NA
     k1.0 <- length(unique(gwas.df$SNP))
     
     if(is.null(fill.missing.N)){

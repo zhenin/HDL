@@ -170,7 +170,8 @@ HDL.rg <-
         
       }
     }
-    
+    gwas1.df$Z[!is.finite(gwas1.df$Z)] <- NA
+    gwas2.df$Z[!is.finite(gwas2.df$Z)] <- NA
     k1.0 <- length(unique(gwas1.df$SNP))
     k2.0 <- length(unique(gwas2.df$SNP))
     

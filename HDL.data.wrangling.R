@@ -132,6 +132,7 @@ if(length(GWAS.type) == 0){
     }
   }
 }
+gwas.hdl.df$Z[!is.finite(gwas.hdl.df$Z)] <- NA
 cat("Data wrangling completed. \n")
 if(length(log.file) != 0){
   cat("Data wrangling completed. \n", file = log.file, append = T)
