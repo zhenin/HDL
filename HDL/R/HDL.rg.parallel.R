@@ -285,14 +285,14 @@ HDL.rg.parallel <-
       if(any(duplicated(gwas1.df.subset$SNP)) == TRUE){
         gwas1.df.subset.duplicated <- gwas1.df.subset %>% 
           mutate(row.num = 1:n()) %>% 
-          filter(SNP == SNP[duplicated(SNP)]) %>%
+          filter(SNP %in% gwas1.df.subset$SNP[duplicated(gwas1.df.subset$SNP)]) %>%
           mutate(SNP_A1_A2 = paste(SNP, A1, A2, sep = "_"))
         snps.ref.df.duplicated <- snps.ref.df %>%
           filter(id %in% gwas1.df.subset.duplicated$SNP)
         SNP_A1_A2.valid <- c(paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A1, snps.ref.df.duplicated$A2, sep = "_"),
                              paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A2, snps.ref.df.duplicated$A1, sep = "_"))
         row.remove <- gwas1.df.subset.duplicated %>% filter(!(SNP_A1_A2 %in% SNP_A1_A2.valid)) %>% select(row.num) %>% unlist()
-        gwas1.df.subset <- gwas1.df.subset[-row.remove,]
+        gwas1.df.subset <- gwas1.df.subset[-row.remove,] %>% distinct(SNP, .keep_all = TRUE)
       }
       
       bhat1.raw <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])
@@ -309,14 +309,14 @@ HDL.rg.parallel <-
       if(any(duplicated(gwas2.df.subset$SNP)) == TRUE){
         gwas2.df.subset.duplicated <- gwas2.df.subset %>% 
           mutate(row.num = 1:n()) %>% 
-          filter(SNP == SNP[duplicated(SNP)]) %>%
+          filter(SNP %in% gwas2.df.subset$SNP[duplicated(gwas2.df.subset$SNP)]) %>%
           mutate(SNP_A1_A2 = paste(SNP, A1, A2, sep = "_"))
         snps.ref.df.duplicated <- snps.ref.df %>%
           filter(id %in% gwas2.df.subset.duplicated$SNP)
         SNP_A1_A2.valid <- c(paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A1, snps.ref.df.duplicated$A2, sep = "_"),
                              paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A2, snps.ref.df.duplicated$A1, sep = "_"))
         row.remove <- gwas2.df.subset.duplicated %>% filter(!(SNP_A1_A2 %in% SNP_A1_A2.valid)) %>% select(row.num) %>% unlist()
-        gwas2.df.subset <- gwas2.df.subset[-row.remove,]
+        gwas2.df.subset <- gwas2.df.subset[-row.remove,] %>% distinct(SNP, .keep_all = TRUE)
       }
       bhat2.raw <- gwas2.df.subset[, "Z"] / sqrt(gwas2.df.subset[, "N"])
       A2.gwas2 <- gwas2.df.subset[, "A2"]
