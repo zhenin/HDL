@@ -215,7 +215,8 @@ HDL.h2 <-
           SNP_A1_A2.valid <- c(paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A1, snps.ref.df.duplicated$A2, sep = "_"),
                                paste(snps.ref.df.duplicated$id, snps.ref.df.duplicated$A2, snps.ref.df.duplicated$A1, sep = "_"))
           row.remove <- gwas1.df.subset.duplicated %>% filter(!(SNP_A1_A2 %in% SNP_A1_A2.valid)) %>% select(row.num) %>% unlist()
-          gwas1.df.subset <- gwas1.df.subset[-row.remove,] %>% distinct(SNP, .keep_all = TRUE)
+          if(length(row.remove) > 0) gwas1.df.subset <- gwas1.df.subset[-row.remove,]
+          gwas1.df.subset <- distinct(gwas1.df.subset, SNP, .keep_all = TRUE)
         }
         
         bhat1.raw <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])
