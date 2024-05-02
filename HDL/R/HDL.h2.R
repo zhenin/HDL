@@ -219,8 +219,8 @@ HDL.h2 <-
           gwas1.df.subset <- distinct(gwas1.df.subset, SNP, .keep_all = TRUE)
         }
         
-        bhat1.raw <- gwas1.df.subset[, "Z"] / sqrt(gwas1.df.subset[, "N"])
-        A2.gwas1 <- gwas1.df.subset[, "A2"]
+        bhat1.raw <- gwas1.df.subset$Z / sqrt(gwas1.df.subset$N)
+        A2.gwas1 <- gwas1.df.subset$A2
         names(bhat1.raw) <- names(A2.gwas1) <- gwas1.df.subset$SNP
         idx.sign1 <- A2.gwas1 == A2.ref[names(A2.gwas1)]
         bhat1.raw <- bhat1.raw*(2*as.numeric(idx.sign1)-1)
