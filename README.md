@@ -1,3 +1,8 @@
+HDL has been updated to v1.4.1 (2025-02-06)
+------------
+
+* Add HDL.L function for estimating local genetic correlations and heritabilities based on GWAS summary statistics
+  
 HDL has been updated to v1.4.0 (2021-04-15)
 ------------
 
