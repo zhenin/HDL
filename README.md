@@ -1,3 +1,8 @@
+HDL has been updated to v1.4.1 (2025-02-07)
+------------
+
+* Add HDL.L function to run local genetic correlation analysis.
+
 HDL has been updated to v1.4.0 (2021-04-15)
 ------------
 
