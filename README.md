@@ -1,7 +1,7 @@
 HDL has been updated to v1.4.1 (2025-02-07)
 ------------
 
-* Add HDL.L function to run local genetic correlation analysis.
+* HDL.L function is integrated into the HDL package for local genetic correlation analysis. Please see the [Wiki](https://github.com/zhenin/HDL/wiki/Example-of-HDL%E2%80%90L-for-local-genetic-correlation-analysis) for detailed instructions.
 
 HDL has been updated to v1.4.0 (2021-04-15)
 ------------
