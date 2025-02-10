@@ -57,9 +57,13 @@ A short presentation about the main ideas and results of HDL given at EMGM 2020 
 
 Citation
 --------
-If you use the HDL software, please cite
+If you use the HDL software, please cite:
 
-[Ning, Z., Pawitan, Y. & Shen, X. High-definition likelihood inference of genetic correlations across human complex traits. _Nat Genet_ (2020)](https://www.nature.com/articles/s41588-020-0653-y).
+[Ning, Z., Pawitan, Y. & Shen, X. High-definition likelihood inference of genetic correlations across human complex traits._Nat Genet_(2020)](https://www.nature.com/articles/s41588-020-0653-y).
+
+Specifically, if you use the HDL.L procedure for local genetic correlation analysis, please cite:
+
+[Li, Y., Pawitan, Y. & Shen, X. An enhanced framework for local genetic correlation analysis._Nat Genet (2025)](https://www.nature.com/ng/).
 
 
 For Help
