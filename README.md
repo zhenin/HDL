@@ -63,7 +63,7 @@ If you use the HDL software, please cite:
 
 Specifically, if you use the HDL.L procedure for local genetic correlation analysis, please cite:
 
-[Li, Y., Pawitan, Y. & Shen, X. An enhanced framework for local genetic correlation analysis.__Nature Genetics_ (2025)](https://www.nature.com/ng/).
+[Li, Y., Pawitan, Y. & Shen, X. An enhanced framework for local genetic correlation analysis. _Nature Genetics_ (2025)]([https://www.nature.com/ng/](https://www.nature.com/articles/s41588-025-02123-3)).
 
 
 For Help
