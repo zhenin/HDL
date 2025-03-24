@@ -3,7 +3,7 @@
 bfile=$1
 outprefix=$2
 bandwidth=${3:-500}      # bandwith (number of SNPs) for LD calculation, default=500
-ld_window=${4:-100000}   # window size (kb) for LD calculation, default=1000000 (whole segment)
+ld_window=${4:-1000000}   # window size (kb) for LD calculation, default=1000000 (whole segment)
 chroms=${5:-1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22}
 
 if [ $# -lt 2 ];then
