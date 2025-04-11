@@ -79,7 +79,7 @@ cat(message)
 gwas2.df <- smart.reader(gwas2.df.path)
 
 Nref <- ifelse(length(Nref)==0, 335265, as.numeric(Nref))
-N0 <- ifelse(length(Nref)==0, min(gwas1.df$N, gwas2.df$N), as.numeric(N0))
+N0 <- ifelse(length(N0)==0, min(gwas1.df$N, gwas2.df$N), as.numeric(N0))
 eigen.cut <- ifelse(length(eigen.cut)==0, "automatic", as.numeric(eigen.cut))
 jackknife.df <- ifelse(length(jackknife.df)==0, FALSE, as.logical(jackknife.df))
 
