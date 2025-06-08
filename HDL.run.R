@@ -77,9 +77,7 @@ if(length(gwas.df.path) == 0 && length(gwas1.df.path) != 0 && length(gwas2.df.pa
   cat(message)
   gwas2.df <- smart.reader(gwas2.df.path)
   
-  if(length(N0) == 0)
-    N0 <- min(gwas1.df$N, gwas2.df$N)
-  
+  N0 <- ifelse(length(N0)==0, min(gwas1.df$N, gwas2.df$N), as.numeric(N0))
   
   ##### Run HDL.rg #####
   
