@@ -119,8 +119,9 @@ if(length(GWAS.type) == 0){
   } else{
     gwas.hdl.df <- gwas.all %>%
       rename_(SNP = SNP, A1 = A1, A2 = A2, N = N, b = b, se = se) %>%
+      mutate(Z = (b/se)) %>% 
       filter(SNP %in% snps.name.list)
-    
+      
     # b is likely to be OR in stead of log(OR)
     if(abs(median(gwas.hdl.df$b) - 1) < 0.1){
       cat("Taking log(b) because b is likely to be OR in stead of log(OR). \n")
