@@ -39,7 +39,7 @@
 #' @author Yuying Li, Xia Shen
 #'
 #' @references
-#' Li Y, Pawitan Y, Shen X (2020). An enhanced framework for local genetic correlation analysis.
+#' Li, Y., Pawitan, Y. & Shen, X. An enhanced framework for local genetic correlation analysis. Nat Genet 57, 1053–1058 (2025). https://doi.org/10.1038/s41588-025-02123-3
 #'
 #' @seealso
 #' HDL tutorial: https://github.com/zhenin/HDL

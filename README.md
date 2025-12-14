@@ -1,3 +1,8 @@
+HDL has been updated to v1.4.2 (2025-02-07)
+------------
+
+* HDL.C function is integrated into the HDL package for region colocalization analysis. Please see the [Wiki](https://github.com/zhenin/HDL/wiki/Example-of-HDL%E2%80%90C-for-genetic-colocalization-inference) for detailed instructions.
+
 HDL has been updated to v1.4.1 (2025-02-07)
 ------------
 
@@ -64,6 +69,10 @@ If you use the HDL software, please cite:
 Specifically, if you use the HDL.L procedure for local genetic correlation analysis, please cite:
 
 [Li, Y., Pawitan, Y. & Shen, X. An enhanced framework for local genetic correlation analysis. _Nature Genetics_ (2025)](https://www.nature.com/articles/s41588-025-02123-3).
+
+If you use the HDL.C procedure for region colocalization analysis, please cite:
+
+Li Y, Zhai R, Yang Z, Li T, Pawitan Y, Shen X (2025). High-definition likelihood inference of colocalization reveals protein biomarkers for human complex diseases. GigaScience (in press).
 
 
 For Help
