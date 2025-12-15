@@ -1,4 +1,4 @@
-HDL has been updated to v1.4.2 (2025-02-07)
+HDL has been updated to v1.4.2 (2025-12-13)
 ------------
 
 * HDL.C function is integrated into the HDL package for region colocalization analysis. Please see the [Wiki](https://github.com/zhenin/HDL/wiki/Example-of-HDL%E2%80%90C-for-genetic-colocalization-inference) for detailed instructions.
