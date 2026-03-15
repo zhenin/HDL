@@ -94,7 +94,7 @@
 #'     \code{rG.X}, \code{rG.Y}).}
 #' }
 #'
-#' @author Zhengyi Fu, Xia Shen
+#' @author Yi Zheng, Xia Shen
 #'
 #' @references
 #' Ning Z, Pawitan Y, Shen X (2020). High-definition likelihood inference of
