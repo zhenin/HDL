@@ -1,3 +1,8 @@
+HDL has been updated to v1.4.3 (2026-03-15)
+------------
+
+* HDL.2x2r function is integrated into the HDL package for causal inference. Please see the [Wiki](https://github.com/zhenin/HDL/wiki/Two‐by‐two-genetic-correlation-(2×2r)-analysis) for detailed instructions.
+
 HDL has been updated to v1.4.2 (2025-12-13)
 ------------
 

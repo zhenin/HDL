@@ -21,7 +21,7 @@
 #' @param lim Tolerance limitation, default lim = exp(-18).
 #' @param chr The chromosome to which the region belongs.
 #' @param proname The protein name of the QTL region.
-#' @param alpha The significance level used to compute the cut-off value 'c' for the likelihood-based confidence interval (LCI). The cut-off 'c' is calculated using the formula: c = exp(-qchisq(1 - alpha, 1) / 2). For example, when alpha = 0.05, it corresponds to a 95% LCI.
+#' @param alpha The significance level used to compute the cut-off value 'c' for the likelihood-based confidence interval (LCI). The cut-off 'c' is calculated using the formula: c = exp(-qchisq(1 - alpha, 1) / 2). For example, when alpha = 0.05, it corresponds to a 95\% LCI.
 #' @param r0 A predefined genetic correlation threshold used to declare local colocalization. The default value is 0.5
 #' @note Users can download the precomputed eigenvalues and eigenvectors of LD correlation matrices for European ancestry population. The download link can be found at https://doi.org/10.5281/zenodo.14209926
 #' These are the LD matrices and their eigen-decomposition from 335,272 genomic British UK Biobank individuals.
