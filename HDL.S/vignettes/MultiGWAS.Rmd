@@ -1,0 +1,192 @@
+---
+title: "Run HDL.S across a large number of traits"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Run HDL.S across a large number of traits}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+In order to fulfill the demands of conducting heritability enrichment analysis across a large number of traits across various genomic annotations, we offer a function `HDL.S.reduct.dim` within the `HDL.S` package. This function speed up the analysis by pre-processing the GWAS summary statistics and annotations.
+
+Here are the workflow of the process:
+
+## Step 01. Convert GWAS summary statistics to $\mathbf{z}_r$
+
+```R
+#!/usr/bin/env Rscript
+library(HDL.S)
+
+## function to read GWAS Z-scores and sample size N from GWAS summary statistics ##
+read.gwas <- function(matZ, phe, gwas.dir=NULL, Ns=NULL, suffix='.sumstats.gz'){
+  gwas.file <- paste0(gwas.dir, '/', phe, suffix)
+  cat('Reading ', gwas.file, '\n')
+  dfi <- data.table::fread(gwas.file, sep='\t', header=TRUE)
+  snps <- dfi$SNP
+  N <- median(dfi$N, na.rm=TRUE)
+  Z <- matrix(dfi$Z, ncol=1)
+  ## add N to first row
+  Z <- rbind(N, Z)
+  row.names(Z) <- c('N', snps)
+
+  colnames(Z) <- phe
+  if(is.null(matZ)){
+    matZ <- Z
+  } else {
+    matZ <- cbind(matZ, Z)
+  }
+  return(matZ)
+}
+
+convertZr.batch <- function(
+  phes, gwas.dir, zr.dir, LD.path, step=500, gwas.suffix='.sumstats.gz',
+  lam.cut=0.1, mc.cores=8, pattern='.*chr(\\d{1,2})\\.(\\d{1,2})[_\\.].*', overwrite=FALSE){
+
+  if(length(phes) == 0) return(NULL)
+  for(s in seq(1, length(phes), by=step)){
+    e <- min(s+step-1, length(phes))
+    Z <- reduce(phes[s:e], .f=read.gwas, gwas.dir=gwas.dir, suffix=gwas.suffix, .init=NULL)
+    N <- Z[1, ]
+    Z <- Z[-1, ]
+    N <- as.numeric(unlist(N))
+    names(N) <- colnames(Z)
+    ref.data <- HDL.S::HDL.S.reduct.dim(LD.path, z=Z, D=NULL, lam.cut=lam.cut, Dr.path=NULL,
+      overwrite=FALSE, mode='disk', mc.cores=mc.cores, pattern=pattern)
+    zr <- lapply(ref.data, function(x) x$zr)
+    rs <- unlist(lapply(zr, function(x) nrow(x)))
+
+    ## convert zr to list by phes
+    zr <- do.call(rbind, zr)
+    zr <- lapply(1:ncol(zr), function(i, rs=NULL, phes=NULL){
+      zz <- zr[, i]
+      e <- cumsum(rs)
+      s <- c(1, e[-length(e)]+1)
+      zz <- sapply(1:length(s), function(j) zz[s[j]:e[j]])
+      return(zz)
+    }, rs=rs, phes=colnames(Z))
+    names(zr) <- colnames(Z)
+    for(phe in names(zr)){
+      cur.zr <- list()
+      cur.zr$zr <- zr[[phe]]
+      cur.zr$N <- unname(unlist(N[phe]))
+      saveRDS(cur.zr, file=paste0(zr.dir, '/', phe, '.rds'))
+    }
+  }
+}
+
+overwrite <- FALSE
+LD.path <- '/path/to/UKB_array_SVD_eigen90_extraction'
+lam.cut <- 1
+mc.cores <- 8
+step <- 500
+gwas.dir <- '/path/to/gwas/sumstats'
+gwas.suffix <- '.sumstats.gz'
+zr.dir <- '/path/to/store/zr'
+pattern <- '.*chr(\\d{1,2})\\.(\\d{1,2})[_\\.].*'
+
+phes <- gsub(gwas.suffix, '', list.files(gwas.dir, pattern=gwas.suffix))
+if(!dir.exists(zr.dir)) dir.create(zr.dir, recursive=TRUE)
+exist.phes <- gsub('\\.rds', '', list.files(zr.dir, pattern='*.rds'))
+if(!overwrite) phes <- setdiff(phes, exist.phes)
+cat('Converting', length(phes), 'traits...\n')
+
+#### convert z to zr ####
+convertZr.batch(phes, gwas.dir, zr.dir, LD.path, step=step, gwas.suffix=gwas.suffix,
+                lam.cut=lam.cut, mc.cores=mc.cores, pattern=pattern, overwrite=overwrite)
+```
+
+## Step 02. Convert genomic annotations to $\mathbf{D}_r$
+
+```R
+#!/usr/bin/env Rscript
+
+read.annot <- function(ann.name, annot.dir){
+  ## write this function to return the D matrix of given ann.name
+  return(D)
+}
+
+create.D <- function(
+  annot.names, LD.path, annot.dir,
+  pattern='.*chr(\\d{1,2})\\.(\\d{1,2})[_\\.].*'){
+
+  D <- NULL
+  for(ann.name in annot.names){
+    dD <- read.annot(ann.name, annot.dir)
+    dD <- HDL.S:::normD(dD, LD.path, norm.method = 'none', pattern = pattern)
+    D <- cbind(D, dD)
+  }
+  return(D)
+}
+
+annot.dir <- '/path/to/directory/of/annotations'
+lam.cut <- 1
+Dr.path <- './HDL.S_Dr_lam_1'
+overwrite <- FALSE
+mc.cores <- 8
+pattern <- '.*chr(\\d{1,2})\\.(\\d{1,2})[_\\.].*'
+norm.method <- 'minmax'
+annot.names <- c('all', 'your', 'annot', 'names')
+
+## read D matrix
+D <- create.D(annot.names, LD.path, annot.dir, pattern)
+
+## convert D to Dr
+ref.data <- HDL.S::HDL.S.reduct.dim(
+  LD.path, z=NULL, D=D, lam.cut=lam.cut, Dr.path=Dr.path, overwrite=overwrite,
+  mode='disk', mc.cores=mc.cores, pattern=pattern, norm.method=norm.method
+)
+```
+
+## Step 03. Run HDL.S in parallel
+
+```R
+run.HDL.S <- function(phe, zr.dir, res.dir, ref.data, overwrite=FALSE){
+  tsv.file <- paste0(res.dir, '/', phe, '.tsv')
+  log.file <- paste0(res.dir, '/', phe, '.log')
+  if(file.exists(tsv.file) && !overwrite) return(NULL)
+  if(file.exists(log.file)) file.remove(log.file)
+
+  zr.N <- readRDS(paste0(zr.dir, '/', phe, '.rds'))
+  N <- zr.N$N
+  for(i in seq_len(length(ref.data))){
+    rank <- length(ref.data[[i]]$lam)
+    ref.data[[i]]$zr <- zr.N$zr[[i]][seq_len(rank)]
+  }
+  res <- HDL.S::HDL.S.optim(ref.data, N, output.file=tsv.file,
+    log.file=log.file, stepwise = TRUE, verbose=TRUE
+  )
+  return(res)
+}
+
+overwrite <- FALSE
+zr.dir <- '/path/to/store/zr'
+Dr.path <- './HDL.S_Dr_lam_1'
+out.dir <- './res-HDL.S'
+mc.cores <- 8
+mode <- 'memory'
+lam.cut <- 1
+pattern <- '.*chr(\\d{1,2})\\.(\\d{1,2})[_\\.].*'
+
+annot.names <- list.dirs(Dr.path, recursive = FALSE, full.names=FALSE)
+phes <- list.files(zr.dir, '*.rds$', recursive = FALSE, full.names=FALSE)
+phes <- gsub('\\.rds$', '', phes)
+
+for(ann.name in annot.names){
+  res.dir <- paste0(out.dir, '/', ann.name)
+  if(!dir.exists(res.dir)) dir.create(res.dir, recursive = TRUE)
+  exist.phes <- gsub('\\.tsv$', '', list.files(res.dir, pattern='*.tsvs'))
+  if(!overwrite) phes <- setdiff(phes, exist.phes)
+  if(length(phes) < 1) next
+
+  ref.data <- HDL.S:::load.Dr(Dr.path, ann.name, lam.cut=lam.cut,
+    pattern=pattern, mc.cores=mc.cores, mode=mode)
+  tmp <- parallel::mclapply(
+    phes, run.HDL.S, zr.dir, res.dir, ref.data, mc.cores=mc.cores
+  )
+}
+```

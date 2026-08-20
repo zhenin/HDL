@@ -1,0 +1,16 @@
+citHeader("To cite HDL-S:")
+
+citEntry(entry="Article",
+         title = "Modeling the genetic architecture of complex traits via stratified high-definition likelihood",
+         author = personList(as.person("Ao Lan"),
+                             as.person("Xia Shen")),
+         journal      = "Nat Commun",
+         year         = "2026",
+         volume       = "0",
+         number       = "0",
+         pages        = "0-0",
+         url          = "",
+         
+         textVersion = 
+         paste("Lan A. and Shen X. Modeling the genetic architecture of complex traits via stratified high-definition likelihood. Nat Commun (2026).")
+)

@@ -1,0 +1,180 @@
+---
+title: "Mismatched LD reference panel"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Mismatched LD reference panel}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+## Missing SNPs warning
+
+A **matched** LD reference panel is vital for the analysis of GWAS summary statistics.
+
+When running `HDL.S` (or `HDL`), you may encounter the following warning message:
+
+```bash
+Warning:
+More than 1% SNPs in reference panel are missed ...
+This may generate bias in estimation.
+Please make sure that you are using correct reference panel.  
+```
+
+By default, `HDL.S` (or `HDL`) fills GWAS z-scores with zeros when SNPs in the LD reference panel are missing.
+
+## Solution
+
+To address this issue, we provide a function to rebuild the LD reference panel by removing missed SNPs.
+
+**Caution**:
+
+* For GWAS summary statistics with **severe missingness**, the heritability may be severely underestimated and the efficiency might be lost.
+* This rebuilding process does not resolve the mismatch of **cross-ancestry** LD structures.
+
+## Example
+
+Suppose you have gone through [this tutorial](https://now2014.github.io/HDL.S/articles/Example.html) and 
+
+* prepared the LD reference panel,
+* installed the `HDL.S` and `HDL` packages.
+
+In this example, we will demo with the `QCed UK Biobank Axiom Array (307,519 SNPs)` reference panel.
+
+### Simulate mismatched GWAS SNPs
+
+To simulate mismatched GWAS SNPs, we randomly subset 80% of SNPs from the LD reference panel.
+
+```bash
+library(HDL.S)
+LD.path <- '/your/path/to/UKB_array_SVD_eigen90_extraction'
+all.snps <- do.call(rbind, lapply(HDL.S:::list.LD.ref.files(LD.path, suffix='.bim'), read.table, header=FALSE))[, 2]
+set.seed(1234)
+gwas.snps <- sample(all.snps, size=floor(length(all.snps) * 0.8), replace=FALSE)
+```
+
+### Re-build the LD reference panel
+
+We rebuild the LD reference panel with `gwas.snps` and store the new LD reference panel to `/path/to/new/UKB_array_SVD_eigen90_extraction`.
+
+This process may take a while, you can put the following code into a script and run in the background with `nohup`.
+
+```R
+LD.path.new <- '/path/to/new/UKB_array_SVD_eigen90_extraction'
+HDL.S.rebuild.ref(LD.path, gwas.snps, LD.path.new, nthreads = 8) # run with 8 CPU cores
+```
+
+Down below message in the console during the process:
+
+```bash
+Cleaning the new directory...
+Updating chr1_1 in 21.80 seconds: 6477 (out of 8090) SNPs are kept.
+Updating chr1_2 in 21.22 seconds: 6468 (out of 8090) SNPs are kept.
+Updating chr1_3 in 21.69 seconds: 6493 (out of 8090) SNPs are kept.
+Updating chr2_1 in 21.14 seconds: 6502 (out of 8156) SNPs are kept.
+Updating chr2_2 in 21.81 seconds: 6558 (out of 8156) SNPs are kept.
+Updating chr2_3 in 22.30 seconds: 6487 (out of 8154) SNPs are kept.
+Updating chr3_1 in 15.25 seconds: 5573 (out of 6935) SNPs are kept.
+Updating chr3_2 in 14.38 seconds: 5502 (out of 6935) SNPs are kept.
+Updating chr3_3 in 14.37 seconds: 5524 (out of 6935) SNPs are kept.
+Updating chr4_1 in 37.38 seconds: 7905 (out of 9777) SNPs are kept.
+Updating chr4_2 in 37.14 seconds: 7870 (out of 9776) SNPs are kept.
+Updating chr5_1 in 31.47 seconds: 7363 (out of 9260) SNPs are kept.
+Updating chr5_2 in 31.76 seconds: 7396 (out of 9260) SNPs are kept.
+Updating chr6_1 in 3.75 seconds: 3054 (out of 3825) SNPs are kept.
+Updating chr6_2 in 13.50 seconds: 5386 (out of 6757) SNPs are kept.
+Updating chr6_3 in 14.17 seconds: 5431 (out of 6756) SNPs are kept.
+Updating chr7_1 in 25.18 seconds: 6931 (out of 8576) SNPs are kept.
+Updating chr7_2 in 27.01 seconds: 6880 (out of 8575) SNPs are kept.
+Updating chr8_1 in 20.67 seconds: 6347 (out of 7954) SNPs are kept.
+Updating chr8_2 in 21.24 seconds: 6389 (out of 7953) SNPs are kept.
+Updating chr9_1 in 15.26 seconds: 5575 (out of 6949) SNPs are kept.
+Updating chr9_2 in 14.73 seconds: 5579 (out of 6948) SNPs are kept.
+Updating chr10_1 in 19.80 seconds: 6200 (out of 7742) SNPs are kept.
+Updating chr10_2 in 20.10 seconds: 6138 (out of 7741) SNPs are kept.
+Updating chr11_1 in 17.51 seconds: 5962 (out of 7513) SNPs are kept.
+Updating chr11_2 in 17.70 seconds: 6038 (out of 7513) SNPs are kept.
+Updating chr12_1 in 17.84 seconds: 5964 (out of 7470) SNPs are kept.
+Updating chr12_2 in 17.99 seconds: 5983 (out of 7469) SNPs are kept.
+Updating chr13_1 in 8.01 seconds: 4386 (out of 5495) SNPs are kept.
+Updating chr13_2 in 8.21 seconds: 4433 (out of 5495) SNPs are kept.
+Updating chr14_1 in 7.03 seconds: 4076 (out of 5094) SNPs are kept.
+Updating chr14_2 in 6.39 seconds: 3979 (out of 5094) SNPs are kept.
+Updating chr15_1 in 6.50 seconds: 4026 (out of 5023) SNPs are kept.
+Updating chr15_2 in 6.45 seconds: 4021 (out of 5023) SNPs are kept.
+Updating chr16_1 in 8.47 seconds: 4494 (out of 5592) SNPs are kept.
+Updating chr16_2 in 8.46 seconds: 4472 (out of 5591) SNPs are kept.
+Updating chr17_1 in 6.92 seconds: 4123 (out of 5172) SNPs are kept.
+Updating chr17_2 in 6.98 seconds: 4115 (out of 5171) SNPs are kept.
+Updating chr18_1 in 38.63 seconds: 7818 (out of 9783) SNPs are kept.
+Updating chr19_1 in 26.94 seconds: 6991 (out of 8711) SNPs are kept.
+Updating chr20_1 in 25.60 seconds: 6797 (out of 8512) SNPs are kept.
+Updating chr21_1 in 6.81 seconds: 3957 (out of 4988) SNPs are kept.
+Updating chr22_1 in 8.26 seconds: 4352 (out of 5420) SNPs are kept.
+[1] "/path/to/new/UKB_array_SVD_eigen90_extraction"
+```
+
+### Test the new LD reference panel
+
+* Test `HDL.S::HDL.S`
+
+  ```R
+  data(gwas1.example, package='HDL')
+  M <- nrow(gwas1.example)
+  set.seed(1234)
+  D <- matrix(rbinom(M, 1, 0.1), ncol=1) # random D vector
+  rownames(D) <- gwas1.example$SNP
+  colnames(D) <- 'randA'
+  
+  res.HDL.S <- HDL.S(
+    D, gwas1.example, LD.path.new, nthreads=4,
+    stepwise=TRUE, lam.cut=1, Dr.path=NULL, mode="memory"
+  )
+  # print(knitr::kable(res))
+  # |item       |  estimation|        se|       p|note                                             |
+  # |:----------|-----------:|---------:|-------:|:------------------------------------------------|
+  # |time       | 124.6314437|        NA|      NA|seconds                                          |
+  # |h2         |   0.3576401| 0.0752782| 2.0e-06|total heritability                               |
+  # |intercept  |   0.9208751| 0.0241091| 0.0e+00|intercept                                        |
+  # |eta        |  -0.1772308| 0.0396035| 7.6e-06|eta                                              |
+  # |fold.raw.W |   4.1409834| 0.3769147| 0.0e+00|enrichment fold                                  |
+  # |converged  |          NA|        NA|      NA|TRUE                                             |
+  # |message    |          NA|        NA|      NA|CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL |
+  ```
+  
+* Test `HDL::HDL.h2`
+
+  ```R
+  data(gwas1.example, package='HDL')
+  HDL::HDL.h2(gwas1.example, LD.path.new)
+  
+  # 246015 out of 246015 (100%) SNPs in reference panel are available in the GWAS.
+  # Estimation is ongoing ... 100%
+  
+  # Integrating piecewise results
+  
+  # Point estimate:
+  # Heritability:  0.1407
+  
+  # Continuing computing standard error with jackknife
+  # Progress... 100%
+  
+  # Heritability:  0.1407 (0.0073)
+  # P:  8.09e-82
+  
+  # $h2
+  # [1] 0.1407243
+  
+  # $h2.se
+  # [1] 0.007344952
+  
+  # $P
+  # [1] 8.093035e-82
+  
+  # $eigen.use
+  # [1] 0.9
+  ```
