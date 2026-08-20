@@ -1,3 +1,8 @@
+HDL.S subtree has been added (2026-07-29)
+------------
+
+* HDL.S is integrated into the HDL repository for heritability enrichment analysis. Please see the [Wiki](https://github.com/zhenin/HDL/wiki/Stratified-heritability-enrichment-analysis) for detailed instructions.
+
 HDL has been updated to v1.4.3 (2026-03-15)
 ------------
 
