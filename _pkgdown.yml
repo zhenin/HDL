@@ -1,0 +1,29 @@
+template:
+  bootstrap: 5
+destination: docs
+
+url: https://now2014.github.io/HDL.S
+
+repo:
+  url:
+    home: https://github.com/now2014/HDL.S/
+    source: https://github.com/now2014/HDL.S/blob/master/
+    issue: https://github.com/now2014/HDL.S/issues/
+    user: https://github.com/
+  branch: master
+
+navbar:
+  structure:
+    left:  [reference, tutorial]
+  components:
+    tutorial:
+      text: Tutorials
+      menu:
+      - text: Example of HDL.S
+        href: articles/Example.html
+      - text: Genomic annotations
+        href: articles/Annotation.html
+      - text: Mismatched LD reference panel
+        href: articles/Rebuild.html
+      - text: Run HDL.S across a large number of traits
+        href: articles/MultiGWAS.html

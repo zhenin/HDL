@@ -1,0 +1,13 @@
+pandoc: 3.1.13
+pkgdown: 2.0.7
+pkgdown_sha: ~
+articles:
+  Annotation: Annotation.html
+  Example: Example.html
+  MultiGWAS: MultiGWAS.html
+  Rebuild: Rebuild.html
+last_built: 2026-08-20T07:38Z
+urls:
+  reference: https://now2014.github.io/HDL.S/reference
+  article: https://now2014.github.io/HDL.S/articles
+

@@ -1,0 +1,375 @@
+---
+title: "Genomic annotations"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Genomic annotations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+## Inroduction
+
+It marks a significant breakthrough that `HDL.S` integrates an interpretation framework for both binary and continuous genomic annotations.
+
+This tutorial will illustrate the process of estimating heritability enrichment fold following the acquisition of genomic features.
+
+**!!!Caution!!!**: When weights of different annotations aren't comparable, direct cross-annotation comparisons of enrichment folds should be avoided. In such cases, comparing the p-values of enrichment fold estimation is more appropriate.
+
+## Data
+
+Suppose you have gone through [this tutorial](https://now2014.github.io/HDL.S/articles/Example.html) and 
+
+* prepared the LD reference panel: `UKB_array_SVD_eigen90_extraction`,
+
+* downloaded the gene locations information from `GeneBreak` package: `ens.gene.ann.hg19.rda`,
+
+* installed the `HDL.S` and `HDL` packages.
+
+Additionally, we download the **gene specificity data of brain cell types** (Skene et al. 2017) from the [hjerling leffler lab](http://www.hjerling-leffler-lab.org/data/scz_singlecell/).
+
+```bash
+wget -c http://www.hjerling-leffler-lab.org/data/scz_singlecell/ctdFiles.zip
+
+unzip ctdFiles.zip
+```
+
+
+
+Data contents for this tutorial:
+
+```bash
+tree ./                                
+# ./
+# ├── ctd_AIBS.rda
+# ├── ctd_allKI.rda
+# ├── ctd_DRONC_human.rda
+# ├── ctd_DRONC_mouse.rda
+# ├── ens.gene.ann.hg19.rda  # gene locations
+# └── UKB_array_SVD_eigen90_extraction  # LD reference panel
+```
+
+
+
+We will use the gene specificity of `ASC` cell type (Astrocytes) annotation in the `ctd_DRONC_human.rda` file for illustration.
+
+```R
+load('ctd_DRONC_human.rda')
+print(ctd[[1]]$specificity[1:5, 1:5])
+#                  ASC       END        exCA        exDG       exPFC
+# A1BG     0.065780027 0.0000000 0.134620574 0.108029999 0.073845381
+# A1BG-AS1 0.021622098 0.1625062 0.168150754 0.113631342 0.197219791
+# A1CF     0.064952275 0.2440825 0.053170623 0.000000000 0.000000000
+# A2M      0.003421627 0.8803978 0.006920069 0.005024324 0.004067106
+# A2M-AS1  0.035128297 0.3960231 0.028756397 0.069229097 0.083800251
+
+gene.weights <- ctd[[1]]$specificity[, 'ASC']
+
+summary(gene.weights)
+#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+# 0.00000 0.02942 0.05097 0.06333 0.07369 1.00000
+```
+
+
+
+## Binary annotation
+
+* Step 01. we create a vector `D` containing annotated SNPs located in the 10% genes with the highest specificity scores.
+
+```R
+LD.path <- 'UKB_array_SVD_eigen90_extraction'
+
+## extract the top 10% genes ##
+q90 <- quantile(gene.weights, 0.9)
+top10.genes <- names(gene.weights)[gene.weights > q90]
+
+## match gene locations ##
+load('ens.gene.ann.hg19.rda') # load ens.gene.ann.hg19
+idx <- ens.gene.ann.hg19$Gene %in% top10.genes
+gene.pos <- unique(ens.gene.ann.hg19[idx, c(3:5)])
+colnames(gene.pos) <- c('chrom', 'start', 'end')
+autosomes <- as.character(1:22)
+gene.pos <- gene.pos[gene.pos$chrom %in% autosomes, ] # keep autosomes only
+gene.pos$chrom <- as.numeric(gene.pos$chrom)
+
+## extract variants position from LD reference panel ##
+bim <- do.call(rbind, lapply(
+  HDL.S:::list.LD.ref.files(LD.path, suffix='.bim'), data.table::fread, header=FALSE
+))
+bim <- bim[, c(2, 1, 4)]
+colnames(bim) <- c('SNP', 'chrom', 'pos')
+
+## match annotated variants ##
+gene2snp <- function(gene.pos, bim, mc.cores=4){
+  map.gene <- function(i, gene.pos.chr, bim.chr){
+    s <- gene.pos.chr[i, 'start']
+    e <- gene.pos.chr[i, 'end']
+    return(bim.chr[bim.chr$pos >= s & bim.chr$pos <= e, ]$SNP)
+  }
+  chroms <- unique(bim$chrom)
+  all.snps <- c()
+  for(cur.chrom in chroms){
+    gene.pos.chr <- gene.pos[gene.pos$chrom == cur.chrom, ]
+    bim.chr <- bim[bim$chrom == cur.chrom, ]
+    snps <- parallel::mclapply(
+      seq_len(nrow(gene.pos.chr)), map.gene,
+      gene.pos.chr=gene.pos.chr, bim.chr=bim.chr,
+      mc.cores=mc.cores
+    )
+    snps <- unique(unlist(snps))
+    all.snps <- c(all.snps, snps)
+  }
+  return(all.snps)
+}
+snps <- gene2snp(gene.pos, bim, 4)
+
+## create the annotation weights for HDL.S ##
+D <- matrix(1, nrow=length(snps), ncol=1, dimnames=list(snps, 'Top10.genes'))
+```
+
+* Step 02. Run `HDL.S` on this binary annotation with the birth weight GWAS summary statistics from `HDL`.
+
+```R
+data(gwas1.example, package='HDL')
+res <- HDL.S::HDL.S(
+  D, gwas1.example, LD.path, mc.cores=4,
+  stepwise=TRUE, lam.cut=1, mode='memory', Dr.path=NULL, fix.eta=0
+)
+
+# print(knitr::kable(res))
+
+# |item             |  estimation|        se|         p|note                                            |
+# |:----------------|-----------:|---------:|---------:|:-----------------------------------------------|
+# |time             | 107.4248767|        NA|        NA|seconds                                         |
+# |h2               |   0.3576401| 0.0752782| 0.0000020|total heritability                              |
+# |intercept        |   0.9208751| 0.0241091| 0.0000000|intercept                                       |
+# |eta              |  -0.1772308| 0.0396035| 0.0000076|eta                                             |
+# |fold.Top10.genes |   1.2268823| 0.0742474| 0.0022449|enrichment fold                                 |
+# |converged        |          NA|        NA|        NA|TRUE                                            |
+# |message          |          NA|        NA|        NA|CONVERGENCE: REL_REDUCTION_OF_F <= FACTR*EPSMCH |
+
+```
+
+## Continuous annotation
+
+In the context of continuous annotation, a normalization process should be employed to ensure that the annotation fits with the HDL.S model.
+
+* Step 01. Extract the gene locations (**hg19**) and weights.
+
+  ```R
+  ## extract gene infomation ##
+  load('ens.gene.ann.hg19.rda') # load ens.gene.ann.hg19
+  gene.df <- unique(ens.gene.ann.hg19[, c(1, 3:5)])
+  colnames(gene.df) <- c('gene', 'chrom', 'start', 'end')
+  autosomes <- as.character(1:22)
+  gene.df <- gene.df[gene.df$chrom %in% autosomes, ] # keep autosomes only
+  gene.df$chrom <- as.numeric(gene.df$chrom)
+  gene.df <- gene.df[!duplicated(gene.df$gene), ] # remove duplicated genes
+  gene.df$weight <- gene.weights[gene.df$gene]
+  gene.df <- gene.df[!is.na(gene.df$weight), ] # remove genes without weight
+  
+  head(gene.df, 5)
+  #            gene chrom  start    end     weight
+  # 27828 LINC00115     1 761586 762902 0.13639639
+  # 12129    SAMD11     1 860260 879955 0.52717077
+  # 12571     NOC2L     1 879584 894689 0.05715007
+  # 12699    KLHL17     1 895967 901095 0.07142173
+  # 13025      HES4     1 934342 935552 0.09547616
+  ```
+
+* Step 02. Map gene weights to SNP weights.
+
+  ```R
+  LD.path <- 'UKB_array_SVD_eigen90_extraction'
+  
+  ## extract variants position from LD reference panel ##
+  bim <- do.call(rbind, lapply(
+    HDL.S:::list.LD.ref.files(LD.path, suffix='.bim'), data.table::fread, header=FALSE
+  ))
+  bim <- bim[, c(2, 1, 4)]
+  colnames(bim) <- c('SNP', 'chrom', 'pos')
+  
+  ## map weights ##
+  mapw <- function(i, j){
+    cur.chrom <- gene.df[j, 'chrom']
+    s <- gene.df[j, 'start']
+    e <- gene.df[j, 'end']
+    w <- gene.df[j, 'weight']
+    bim <- bim[bim$chrom == cur.chrom, ]
+    bim <- bim[bim$pos >= s & bim$pos <= e, ]
+  
+    snps <- unique(c(names(i), bim$SNP))
+    nsnps <- length(snps)
+    snps.w <- rep(0, nsnps)
+    names(snps.w) <- snps
+    snps.w[names(i)] <- snps.w[names(i)] + i
+    snps.w[bim$SNP] <- snps.w[bim$SNP] + w
+    if(j %% 1000 == 0) cat(sprintf(
+      '# of processed genes %d: # of annotated %d variants (%.2f%%) \n',
+      j, nsnps, nsnps/M*100
+    ))
+    return(snps.w)
+  }
+  M <- nrow(bim)
+  snps.w <- Reduce(mapw, 1:nrow(gene.df), init=c())
+  D <- matrix(snps.w, ncol=1, dimnames = list(names(snps.w), 'raw.W'))
+  saveRDS(D, 'raw.W.rds')
+  ```
+
+* Step 03. Check the weights of variants.
+
+  ```R
+  summary(D)
+   #     raw.W        
+   # Min.   :0.00000  
+   # 1st Qu.:0.02038  
+   # Median :0.04425  
+   # Mean   :0.06551  
+   # 3rd Qu.:0.07747  
+   # Max.   :1.65767
+  ```
+
+### Min-max normalization
+
+One straightforward normalization method involves min-max normalization, where the normalized `D` value signifies the degree to which the selected variant pertains to the annotated category.
+
+```R
+LD.path <- 'UKB_array_SVD_eigen90_extraction'
+D <- readRDS('raw.W.rds')
+colnames(D) <- 'raw.W.minmax'
+D.minmax <- HDL.S:::normD(D, LD.path, norm.method='minmax')
+
+# Annotation name(s): [raw.W.minmax].
+# Applied `minmax` weight nomalization on [121235 (39.424%)] annotated variants. The theoretical upper boundary for enrichment fold is M / Md = [61.419].
+
+summary(D.minmax)
+ #  raw.W.minmax    
+ # Min.   :0.00000
+ # 1st Qu.:0.00000
+ # Median :0.00000
+ # Mean   :0.01628
+ # 3rd Qu.:0.02030
+ # Max.   :1.00000
+```
+
+Run `HDL.S` with `minmax` normalization.
+
+```R
+LD.path <- 'UKB_array_SVD_eigen90_extraction'
+data(gwas1.example, package='HDL')
+D <- readRDS('raw.W.rds')
+colnames(D) <- 'raw.W.minmax'
+res <- HDL.S::HDL.S(
+  D, gwas1.example, LD.path, mc.cores=4,
+  stepwise=TRUE, lam.cut=1, mode='memory', Dr.path=NULL, norm.method='minmax'
+)
+
+# print(knitr::kable(res))
+# |item              |  estimation|        se|       p|note                                             |
+# |:-----------------|-----------:|---------:|-------:|:------------------------------------------------|
+# |time              | 125.1962769|        NA|      NA|seconds                                          |
+# |h2                |   0.3576401| 0.0752782| 2.0e-06|total heritability                               |
+# |intercept         |   0.9208751| 0.0241091| 0.0e+00|intercept                                        |
+# |eta               |  -0.1772308| 0.0396035| 7.6e-06|eta                                              |
+# |fold.raw.W.minmax |   4.1409834| 0.3769147| 0.0e+00|enrichment fold                                  |
+# |converged         |          NA|        NA|      NA|TRUE                                             |
+# |message           |          NA|        NA|      NA|CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL |
+
+```
+
+### Scaled normalization
+
+Alternatively, another approach is to scale `sum(D)` to the number of annotated variants.
+
+```R
+LD.path <- 'UKB_array_SVD_eigen90_extraction'
+D <- readRDS('raw.W.rds')
+colnames(D) <- 'raw.W.scaled'
+D.scaled <- HDL.S:::normD(D, LD.path, norm.method='scaled')
+
+# Annotation name(s): [raw.W.scaled].
+# Applied `scaled` weight nomalization on [121235 (39.424%)] annotated variants. The theoretical upper boundary for enrichment fold is M / Md = [2.537].
+
+summary(D.scaled)
+ #  raw.W.scaled    
+ # Min.   : 0.0000  
+ # 1st Qu.: 0.0000  
+ # Median : 0.0000  
+ # Mean   : 0.3942  
+ # 3rd Qu.: 0.4916  
+ # Max.   :24.2134 
+```
+
+Run `HDL.S` with `scaled` normalization.
+
+```R
+LD.path <- 'UKB_array_SVD_eigen90_extraction'
+data(gwas1.example, package='HDL')
+D <- readRDS('raw.W.rds')
+colnames(D) <- 'raw.W.scaled'
+res <- HDL.S::HDL.S(
+  D, gwas1.example, LD.path, mc.cores=4,
+  stepwise=TRUE, lam.cut=1, mode='memory', Dr.path=NULL, norm.method='scaled'
+)
+
+# print(knitr::kable(res))
+# |item              |  estimation|        se|       p|note                                             |
+# |:-----------------|-----------:|---------:|-------:|:------------------------------------------------|
+# |time              | 118.9375212|        NA|      NA|seconds                                          |
+# |h2                |   0.3576401| 0.0752782| 2.0e-06|total heritability                               |
+# |intercept         |   0.9208751| 0.0241091| 0.0e+00|intercept                                        |
+# |eta               |  -0.1772308| 0.0396035| 7.6e-06|eta                                              |
+# |fold.raw.W.scaled |   4.1409834| 0.3769147| 0.0e+00|enrichment fold                                  |
+# |converged         |          NA|        NA|      NA|TRUE                                             |
+# |message           |          NA|        NA|      NA|CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL |
+```
+
+### No normalization
+
+One can also choose to keep the original annotation weights without normalization.
+
+```R
+LD.path <- 'UKB_array_SVD_eigen90_extraction'
+D <- readRDS('raw.W.rds')
+D.none <- HDL.S:::normD(D, LD.path, norm.method='none')
+
+# Annotation name(s): [raw.W].
+# No normalization applied on [121235 (39.424%)] annotated variants. The theoretical upper boundary for enrichment fold is M / Md = [37.051].
+
+summary(D.none)
+ #     raw.W        
+ # Min.   :0.00000  
+ # 1st Qu.:0.00000  
+ # Median :0.00000  
+ # Mean   :0.02699  
+ # 3rd Qu.:0.03366  
+ # Max.   :1.65767
+```
+
+Run `HDL.S` without annotation weights normalization.
+
+```R
+LD.path <- 'UKB_array_SVD_eigen90_extraction'
+data(gwas1.example, package='HDL')
+D <- readRDS('raw.W.rds')
+res <- HDL.S::HDL.S(
+  D, gwas1.example, LD.path, mc.cores=4,
+  stepwise=TRUE, lam.cut=1, mode='memory', Dr.path=NULL, norm.method='none'
+)
+
+# print(knitr::kable(res))
+# |item       |  estimation|        se|       p|note                                             |
+# |:----------|-----------:|---------:|-------:|:------------------------------------------------|
+# |time       | 124.6314437|        NA|      NA|seconds                                          |
+# |h2         |   0.3576401| 0.0752782| 2.0e-06|total heritability                               |
+# |intercept  |   0.9208751| 0.0241091| 0.0e+00|intercept                                        |
+# |eta        |  -0.1772308| 0.0396035| 7.6e-06|eta                                              |
+# |fold.raw.W |   4.1409834| 0.3769147| 0.0e+00|enrichment fold                                  |
+# |converged  |          NA|        NA|      NA|TRUE                                             |
+# |message    |          NA|        NA|      NA|CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL |
+```
+

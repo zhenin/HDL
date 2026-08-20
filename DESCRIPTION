@@ -1,0 +1,17 @@
+Package: HDL.S
+Type: Package
+Title: Stratified high-definition likelihood inference of heritability
+        enrichment
+Version: 1.3.0
+Authors@R: c(person("Ao","Lan",role=c("aut", "cre"),email="lanao15@126.com"),
+             person("Xia","Shen",role="aut"))
+Description: The functions return estimation and standard error of heritability and heritability enrichment fold of given trait based on GWAS summary statistics.
+URL: https://now2014.github.io/HDL.S/, https://github.com/now2014/HDL.S
+BugReports: https://github.com/now2014/HDL.S/issues
+License: GPL (>= 3)
+Imports: dplyr, parallel, RhpcBLASctl
+Depends: R (>= 3.1.1)
+Encoding: UTF-8
+RoxygenNote: 7.2.3
+NeedsCompilation: no
+Packaged: 2024-04-03 13:16:16 UTC; lanao
