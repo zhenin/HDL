@@ -265,7 +265,7 @@ normD <- function(
     HDL.S:::log.msg(warn.msg, log.file, type="warning")
   }
 
-  return(dD)
+  return(D)
 }
 
 #' @title log likelihood function for joint optimization
